@@ -7,3 +7,6 @@
 [submodule "boot/cypress/libs/bsp/TARGET_CY8CKIT-062-WIFI-BT-M0"]
 	path = boot/cypress/libs/bsp/TARGET_CY8CKIT-062-WIFI-BT-M0
 	url = http://git-ore.aus.cypress.com/repo/cy_mcuboot_project/TARGET_CY8CKIT-062-WIFI-BT-M0.git
+[submodule "boot/cypress/libs/mbedtls"]
+	path = boot/cypress/libs/mbedtls
+	url = https://github.com/ARMmbed/mbedtls.git
