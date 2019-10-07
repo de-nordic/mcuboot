@@ -29,10 +29,14 @@
 
 # default TARGET
 APP ?= MCUBootApp
+#
+APPS := MCUBootApp
 
-all:
-
-include $(CURDIR)/$(APP)/targets.mk
+ifneq ($(filter $(APP), $(APPS)),)
+include ./$(APP)/$(APP).mk
+else
+$(error Not supported application: '$(APP)')
+endif
 
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)
