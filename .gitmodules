@@ -7,3 +7,6 @@
 [submodule "boot/cypress/libs/bsp/TARGET_CY8CKIT-062-WIFI-BT"]
 	path = boot/cypress/libs/bsp/TARGET_CY8CKIT-062-WIFI-BT
 	url = http://git-ore.aus.cypress.com/repo-staging/TARGET_CY8CKIT-062-WIFI-BT
+[submodule "boot/cypress/libs/bsp/TARGET_CY8CKIT-062-WIFI-BT-M0"]
+	path = boot/cypress/libs/bsp/TARGET_CY8CKIT-062-WIFI-BT-M0
+	url = http://git-ore.aus.cypress.com/repo/cy_mcuboot_project/TARGET_CY8CKIT-062-WIFI-BT-M0.git
