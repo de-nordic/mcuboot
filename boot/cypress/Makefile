@@ -28,11 +28,11 @@
 ################################################################################
 
 # default TARGET
-APP ?= MCUBoot
+APP ?= MCUBootApp
 
 all:
-include C:\MCUboot\cy_mcuboot\boot\cypress\MCUBootApp\targets.mk
-include /$(APP)/targets.mk
+
+include $(CURDIR)/$(APP)/targets.mk
 
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)

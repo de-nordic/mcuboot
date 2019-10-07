@@ -41,3 +41,10 @@ include ./libs/bsp/TARGET_$(TARGET)/$(TARGET).mk
 else
 $(error Not supported target: '$(TARGET)')
 endif
+
+# TODO: include appropriate BSP sources
+# TODO: include appropriate BSP headers
+# TODO: include appropriate BSP assembly
+# TODO: include appropriate BSP linker(s)
+# TODO: include appropriate BSP precompiled
+
