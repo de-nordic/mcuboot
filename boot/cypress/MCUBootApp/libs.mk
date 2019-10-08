@@ -76,6 +76,6 @@ INCLUDES_LIBS += $(INCLUDES_MBEDTLS)
 ##INCLUDES_PDL = $(addprefix -I$(PDL_DRIVE)$(PDL_PATH)/, $(INCLUDE_DIRS_PDL))
 #INCLUDES_PDL = $(addprefix -I$(PDL_PATH)/, $(INCLUDE_DIRS_PDL))
 #SOURCES_PDL  = $(SOURCE_FILES_PDL)
-#DEFINES_PDL += -DPDL_VERSION=$(PDL_VERSION)
+DEFINES_PDL += -DPDL_VERSION=$(PDL_VERSION)
 #################################################################################
 #

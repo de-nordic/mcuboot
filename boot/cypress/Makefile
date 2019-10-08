@@ -51,14 +51,18 @@ INCLUDES += $(INCLUDES_LIBS)
  
 O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
 
-DEFINES := $(DEFINES_APP)
+DEFINES += $(DEFINES_APP)
 #DEFINES +=
+
+ifneq ($(DEFINES),)
+DEFINES_SOLUTION=$(addprefix -D,$(DEFINES))
+endif
 
 #DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
 
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)
-#OUT := ./out
+OUT := ./out
 #
 #ifeq ($(CY_BUILD_NUMBER), )
 #	# may be useful when building from a command line on a local machine
@@ -136,12 +140,18 @@ DEFINES := $(DEFINES_APP)
 #endif
 #
 #
-##.PHONY: all clean build postbuild
+##.PHONY: all clean app build postbuild
 .PHONY: all
 
-all: 
+all: clean app
+
+app:
+	@`mkdir -p ./$(APP_NAME)/out`
+	@`mkdir -p ./$(APP_NAME)/out/obj`
+#	@`mkdir -p ./$(APP_NAME)/out/obj/$@`
+	$(MAKE) build -j4
+
 #all: target_psoc6_ble2 target_psoc6_2m target_psoc6_2m_psvp
-##all: target_psoc6_2m_psvp
 #
 #build_info:
 #	@echo "*** Asm sources (ASM_FILES):"
@@ -163,48 +173,13 @@ all:
 #	@`mkdir -p ./out/obj/$@`
 #	$(MAKE) build FAMILY:=$(FAMILY_PSOC6A_BLE2) TARGET=$@ SI_REVISION:=0D SUFFIX_FAMILY:=psoc62_0D SUFFIX_VERSION:=4.0.0.$(CY_BUILD_NUMBER) -j4
 #
-#target_psoc6_ble2_psvp:
-#	#Build for PSOC6ble2 PSVP
-#	@`mkdir -p ./out`
-#	@`mkdir -p ./out/obj`
-#	@`mkdir -p ./out/obj/$@`
-#	$(MAKE) build FAMILY:=$(FAMILY_PSOC6A_BLE2) TARGET=$@ SI_REVISION:=0D SUFFIX_FAMILY:=psoc6able2_psvp SUFFIX_VERSION:=4.0.0.$(CY_BUILD_NUMBER) -j4
 #
-#target_psoc6_2m:
-#	#Build 2M
-#	@`mkdir -p ./out`
-#	@`mkdir -p ./out/obj`
-#	@`mkdir -p ./out/obj/$@`
-#	$(MAKE) build FAMILY:=$(FAMILY_PSOC6A_2M) TARGET=$@ SI_REVISION:=0A SUFFIX_FAMILY:=psoc6a2m SUFFIX_VERSION:=4.0.0.$(CY_BUILD_NUMBER) -j4
-#
-#target_psoc6_2m_psvp:
-#	#Build 2M for PSVP
-#	@`mkdir -p ./out`
-#	@`mkdir -p ./out/obj`
-#	@`mkdir -p ./out/obj/$@`
-#	$(MAKE) build FAMILY:=$(FAMILY_PSOC6A_2M) TARGET=$@ SI_REVISION:=0A SUFFIX_FAMILY:=psoc6a2m_psvp SUFFIX_VERSION:=4.0.0.$(CY_BUILD_NUMBER) -j4
-#
-#target_psoc6_512k:
-#	#Build 512k
-#	@`mkdir -p ./out`
-#	@`mkdir -p ./out/obj`
-#	@`mkdir -p ./out/obj/$@`
-#	$(MAKE) build FAMILY:=$(FAMILY_PSOC6A_512K) TARGET=$@ SI_REVISION:=0A SUFFIX_FAMILY:=psoc6a512 SUFFIX_VERSION:=4.0.0.$(CY_BUILD_NUMBER) -j4
-#
-#target_psoc6_512k_psvp:
-#	#Build 512k for PSVP
-#	@`mkdir -p ./out`
-#	@`mkdir -p ./out/obj`
-#	@`mkdir -p ./out/obj/$@`
-#	$(MAKE) build FAMILY:=$(FAMILY_PSOC6A_512K) TARGET=$@ SI_REVISION:=0A SUFFIX_FAMILY:=psoc6a512_psvp SUFFIX_VERSION:=4.0.0.$(CY_BUILD_NUMBER) -j4
-#
-#clean:
-#	rm -rf ./out
 #
 ## Build target
+build:
 #build: $(OUT)/flashboot_$(SUFFIX_FAMILY).hex
 #	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/flashboot_$(SUFFIX_FAMILY).elf
-#
+
 #$(OUT)/flashboot_$(SUFFIX_FAMILY).hex: $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ1.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf
 #	$(PDL_ELFTOOL) --sign $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf --output $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf
 #	$(PDL_ELFTOOL) --sign $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf --output $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf
@@ -249,15 +224,22 @@ all:
 #endif
 #	@echo
 #
+#$(info DEBUG_MESSAGE_1:)
+#$(info $(COMPILER))
+
 #$(OUT)/obj/$(TARGET)/%.o: %.S
-#ifeq ($(COMPILER), GCC)
-#	@echo @$(CC) $(CFLAGS) -c $< -o $@
-#	@$(CC) $(CFLAGS) -c $< -o $@ $(COLOR_OUTPUT)
-#else
-#	@echo $(AS) $< -o $@ $(AS_FLAGS)
-#	@$(AS) $< -o $@ $(AS_FLAGS) $(COLOR_OUTPUT)
-#endif
-#	@echo
+
+ifeq ($(COMPILER), GCC)
+	@echo @$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
+else
+	@echo $(AS) $< -o $@ $(AS_FLAGS)
+	@$(AS) $< -o $@ $(AS_FLAGS) $(COLOR_OUTPUT)
+endif
+	@echo
+
+clean:
+	rm -rf ./$(APP_NAME)/out
 
 # DEBUG PRINT
 #$(info $(ASM_FILES))
@@ -269,5 +251,7 @@ all:
 $(info $(INCLUDE_DIRS))
 
 $(info $(DEFINES))
+
+$(info $(CC))
 
 #$(info $(O_FILES))
