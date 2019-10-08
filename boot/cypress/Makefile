@@ -53,17 +53,17 @@ DEFINES := $(DEFINES_BSP)
 DEFINES += $(DEFINES_APP)
 DEFINES += -DCUSTOM_DEF
 
-$(info ==============================================================================)
-$(info = Collected Defines string: =)
-$(info ==============================================================================)
-$(info $(DEFINES))
+#$(info ==============================================================================)
+#$(info = Collected Defines string: =)
+#$(info ==============================================================================)
+#$(info $(DEFINES))
 #DEFINES +=
 
 #DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
 
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)
-OUT := ./out
+OUT := ./$(APP_NAME)/out
 #
 #ifeq ($(CY_BUILD_NUMBER), )
 #	# may be useful when building from a command line on a local machine
@@ -142,14 +142,14 @@ VPATH = $(dir $(C_FILES) $(ASM_FILES))
 #
 #
 ##.PHONY: all clean app build postbuild
-.PHONY: all
+.PHONY: all clean app build
 
 all: clean app
 
 app:
-	@`mkdir -p ./$(APP_NAME)/out`
-	@`mkdir -p ./$(APP_NAME)/out/obj`
-	@`mkdir -p ./$(APP_NAME)/out/obj/$@`
+	@`mkdir -p $(OUT)`
+	@`mkdir -p $(OUT)/obj`
+	@`mkdir -p $(OUT)/obj/$@`
 	$(MAKE) build -j4
 
 #all: target_psoc6_ble2 target_psoc6_2m target_psoc6_2m_psvp
@@ -177,9 +177,12 @@ app:
 #
 #
 ## Build target
-#build: $(OUT)/$(APP_NAME)_CM0p.hex
+build: 
+
+#	$(OUT)/$(APP_NAME)_CM0p.hex
 #	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/$(APP_NAME)_CM0p.elf
-build:
+#build:
+
 #$(OUT)/$(APP_NAME)_CM0p.hex: $(OUT)/$(APP_NAME)_CM0p_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ1.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf
 #	$(PDL_ELFTOOL) --sign $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf --output $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf
 #	$(PDL_ELFTOOL) --sign $(OUT)/$(APP_NAME)_CM0p_link.elf --output $(OUT)/$(APP_NAME)_CM0p_link.elf
@@ -188,11 +191,11 @@ build:
 #	$(PDL_ELFTOOL) --merge $(OUT)/$(APP_NAME)_CM0p.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf --output $(OUT)/$(APP_NAME)_CM0p2_link.elf --hex $(OUT)/$(APP_NAME)_CM0p_cm0open.hex
 #	$(OBJDUMP) -h -S $(OUT)/$(APP_NAME)_CM0p_link.elf > $(OUT)/$(APP_NAME)_CM0p.asm
 #
-#$(OUT)/$(APP_NAME)_CM0p_link.elf: $(addprefix $(OUT)/obj/$(TARGET)/, $(O_FILES))
-#	@# the first  line prints a command
-#	@# the second line executes the command and prints the command's stdout and stderr with colors
-#	@echo $(LD) $(O_FILES) -o $@ $(LDFLAGS)
-#	@$(LD) $(addprefix $(OUT)/obj/$(TARGET)/, $(O_FILES)) -o $@ $(LDFLAGS) $(COLOR_OUTPUT)
+$(OUT)/$(APP_NAME)_CM0p.elf: $(addprefix $(OUT)/obj/, $(O_FILES))
+	@# the first  line prints a command
+	@# the second line executes the command and prints the command's stdout and stderr with colors
+	@echo $(LD) $(O_FILES) -o $@ $(LDFLAGS)
+	@$(LD) $(addprefix $(OUT)/obj/, $(O_FILES)) -o $@ $(LDFLAGS)
 #
 #$(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf : fb_cm4.c
 #	$(CC) $(CFLAGS)  -c fb_cm4.c -o $(OUT)/obj/$(TARGET)/fb_cm4.o
@@ -210,17 +213,17 @@ build:
 #	$(OBJDUMP) -h -S $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf > $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.asm
 #
 
-$(OUT)/$(APP_NAME)_CM0p.elf : ./$(APP_NAME)/main.c
-	$(CC) $(CFLAGS)  -c main.c -o $(OUT)/obj/$(TARGET)/main.o
-	$(LD) $(OUT)/obj/$(TARGET)/main.o -o $@ $(LDFLAGS_TEMPL) $(COLOR_OUTPUT)
-#	$(OBJDUMP) -h -S $(OUT)/$(APP_NAME)_CM0p.elf > $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.asm
+#$(OUT)/$(APP_NAME)_CM0p.elf : ./$(APP_NAME)/main.c
+#	$(CC) $(CFLAGS)  -c main.c -o $(OUT)/obj/main.o
+#	$(LD) $(OUT)/obj/main.o -o $@ $(LDFLAGS_TEMPL) $(COLOR_OUTPUT)
+##	$(OBJDUMP) -h -S $(OUT)/$(APP_NAME)_CM0p.elf > $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.asm
 
-$(OUT)/obj/$(TARGET)/%.o: %.c
+$(OUT)/obj/%.o: %.c
 	@echo $(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
 	@$(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@ $(COLOR_OUTPUT)
 	@echo
 
-$(OUT)/obj/$(TARGET)/%.o: %.s
+$(OUT)/obj/%.o: %.s
 ifeq ($(COMPILER), GCC)
 	@echo @$(CC) $(CFLAGS) -c $< -o $@
 	@$(CC) $(CFLAGS) -c $< -o $@ $(COLOR_OUTPUT)
@@ -237,13 +240,13 @@ clean:
 #$(info $(ASM_FILES))
 
 #$(info $(C_FILES))
-
+#
 #$(info $(INCLUDES))
-
-$(info $(INCLUDE_DIRS))
-
-$(info $(DEFINES))
-
-$(info $(CC))
+#
+#$(info $(INCLUDE_DIRS))
+#
+#$(info $(DEFINES))
+#
+#$(info $(CC))
 
 #$(info $(O_FILES))
