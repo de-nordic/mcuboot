@@ -67,7 +67,7 @@ else ifeq ($(HOST_OS), osx)
 	CC := "$(GCC_PATH)/bin/arm-none-eabi-gcc"
 	LD := $(CC)
 
-else ifreq ($(HOST_OS), linux)
+else ifeq ($(HOST_OS), linux)
 #	GCC_PATH := /usr/bin/gcc-arm-none-eabi/bin/arm-none-eabi-gcc
 	# executables
 	CC := "$(GCC_PATH)/bin/arm-none-eabi-gcc"
@@ -110,7 +110,7 @@ ifeq ($(COMPILER), GCC)
 #	LDFLAGS_CM4 := $(LDFLAGS_COMMON) -T ./$(LINKER_SCRIPT_CM4) -Wl,-Map,$(OUT)/flashboot_$(SUFFIX_FAMILY)_cm4.map
 #	LDFLAGS_TEMPL := $(LDFLAGS_COMMON) -T ./$(LINKER_SCRIPT_TEMPL) -Wl,-Map,$(OUT)/flashboot_$(SUFFIX_FAMILY)_policy_templ.map
 
-else ifeq($(COMPILER), IAR)
+else ifeq ($(COMPILER), IAR)
 
 	CFLAGS := --debug --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config "$(IAR_PATH)\INC\c\DLib_Config_Normal.h"
 	CFLAGS += -Ohz --silent

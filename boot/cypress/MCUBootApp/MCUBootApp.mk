@@ -27,8 +27,7 @@ CUR_APP_PATH = $(CURDIR)/$(APP)
 
 include $(CUR_APP_PATH)/targets.mk
 include $(CUR_APP_PATH)/libs.mk
-
-#include $(CURDIR)/toolchains.mk
+include $(CUR_APP_PATH)/toolchains.mk
 
 SOURCES_APP := $(wildcard $(CUR_APP_PATH)/*.c)
 INCLUDES_APP := $(wildcard $(CUR_APP_PATH)/*.h)

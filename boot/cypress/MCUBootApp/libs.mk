@@ -31,6 +31,7 @@ PDL_VERSION = 121
 CUR_LIBS_PATH = $(CURDIR)/libs
 
 SOURCES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/source/*.c)
+SOURCES_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/devices/bsp/COMPONENT_MTB/startup/system_psoc6_cm0plus.c
 #SOURCES_BSP :=
 SOURCES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/library/*.c)
 
@@ -46,6 +47,15 @@ INCLUDES_LIBS := $(INCLUDES_PDL)
 #INCLUDES_LIBS += $(INCLUDES_BSP)
 INCLUDES_LIBS += $(INCLUDES_MBEDTLS)
 
+#INCLUDE_DIRS_PDL  = cmsis/include devices/include devices/include/ip drivers/include # devices/bsp/COMPONENT_MTB/startup
+
+#ifeq ($(COMPILER), GCC)
+#	ASM_FILES_PDL += $(PDL_PATH)/drivers/source/TOOLCHAIN_GCC_ARM/cy_syslib_gcc.S
+#else
+#	ASM_FILES_PDL += $(PDL_PATH)/drivers/source/TOOLCHAIN_IAR/cy_syslib_iar.s
+#endif
+
+################################################################################
 #
 ### In case of PDL ABSOLUTE PATH, PDL_DRIVE variable should be set separately
 # PDL_DRIVE = /c
@@ -54,14 +64,10 @@ INCLUDES_LIBS += $(INCLUDES_MBEDTLS)
 # SOURCES_PDL_ALLDRV  = $(wildcard $(PDL_PATH)/drivers/source/*.c)
 # SOURCES_PDL_CRYPTO  = $(wildcard $(PDL_PATH)/drivers/source/cy_crypto*.c)
 # SOURCES_PDL_DRIVERS = $(filter-out $(SOURCES_PDL_CRYPTO), $(SOURCES_PDL_ALLDRV))
-#INCLUDE_DIRS_PDL  = cmsis/include devices/include devices/include/ip drivers/include # devices/bsp/COMPONENT_MTB/startup
+
 #SOURCE_FILES_PDL  = $(wildcard $(PDL_PATH)/drivers/source/*.c)
-#SOURCE_FILES_PDL += $(PDL_PATH)/devices/bsp/COMPONENT_MTB/startup/system_psoc6_cm0plus.c
-#ifeq ($(COMPILER), GCC)
-#	ASM_FILES_PDL += $(PDL_PATH)/drivers/source/TOOLCHAIN_GCC_ARM/cy_syslib_gcc.S
-#else
-#	ASM_FILES_PDL += $(PDL_PATH)/drivers/source/TOOLCHAIN_IAR/cy_syslib_iar.s
-#endif
+
+
 ##INCLUDES_PDL = $(addprefix -I$(PDL_DRIVE)$(PDL_PATH)/, $(INCLUDE_DIRS_PDL))
 #INCLUDES_PDL = $(addprefix -I$(PDL_PATH)/, $(INCLUDE_DIRS_PDL))
 #SOURCES_PDL  = $(SOURCE_FILES_PDL)

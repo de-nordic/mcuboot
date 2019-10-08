@@ -7,7 +7,7 @@
 #
 ################################################################################
 # \copyright
-# Copyright 2018-2019 Cypress Semiconductor Corporation
+# Copyright 2019 Cypress Semiconductor Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -131,8 +131,9 @@ O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_
 #
 #
 ##.PHONY: all clean build postbuild
-#
-#
+.PHONY: all
+
+all: 
 #all: target_psoc6_ble2 target_psoc6_2m target_psoc6_2m_psvp
 ##all: target_psoc6_2m_psvp
 #
@@ -252,6 +253,7 @@ O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_
 #endif
 #	@echo
 
+# DEBUG PRINT
 #$(info $(ASM_FILES))
 
 $(info $(C_FILES))
