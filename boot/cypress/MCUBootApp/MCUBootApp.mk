@@ -29,9 +29,15 @@ include $(CUR_APP_PATH)/targets.mk
 include $(CUR_APP_PATH)/libs.mk
 include $(CUR_APP_PATH)/toolchains.mk
 
-# TODO: MCUBoot library
 # TODO: add DEFINES in Application
 
+# TODO: MCUBoot library
+SOURCES_MCUBOOT := $(wildcard $(CURDIR)/../bootutil/src/*.c)
+INCLUDES_MCUBOOT := $(wildcard $(CURDIR)/../bootutil/include/bootutil/*.h)
+
 SOURCES_APP := $(wildcard $(CUR_APP_PATH)/*.c)
+SOURCES_APP += $(SOURCES_MCUBOOT)
+
 INCLUDES_APP := $(wildcard $(CUR_APP_PATH)/*.h)
 INCLUDES_APP += $(wildcard $(CUR_APP_PATH)/config/*.h)
+INCLUDES_APP += $(INCLUDES_MCUBOOT)
