@@ -42,6 +42,13 @@ else
 $(error Not supported target: '$(TARGET)')
 endif
 
+SOURCES_BSP :=
+#SOURCES_BSP +=
+
+INCLUDES_BSP :=
+#INCLUDES_BSP := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h)
+INCLUDES_BSP +=
+
 # TODO: include appropriate BSP sources
 # TODO: include appropriate BSP headers
 # TODO: include appropriate BSP assembly

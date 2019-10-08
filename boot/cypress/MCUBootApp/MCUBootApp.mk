@@ -29,6 +29,9 @@ include $(CUR_APP_PATH)/targets.mk
 include $(CUR_APP_PATH)/libs.mk
 include $(CUR_APP_PATH)/toolchains.mk
 
+# TODO: MCUBoot library
+# TODO: add DEFINES in Application
+
 SOURCES_APP := $(wildcard $(CUR_APP_PATH)/*.c)
 INCLUDES_APP := $(wildcard $(CUR_APP_PATH)/*.h)
 INCLUDES_APP += $(wildcard $(CUR_APP_PATH)/config/*.h)

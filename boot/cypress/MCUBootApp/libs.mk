@@ -32,19 +32,18 @@ CUR_LIBS_PATH = $(CURDIR)/libs
 
 SOURCES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/source/*.c)
 SOURCES_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/devices/bsp/COMPONENT_MTB/startup/system_psoc6_cm0plus.c
-#SOURCES_BSP :=
 SOURCES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/library/*.c)
 
 INCLUDES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/include/*.h)
-#INCLUDES_BSP := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h)
+
 INCLUDES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h)
  
 SOURCES_LIBS := $(SOURCES_PDL)
-#SOURCES_LIBS += $(SOURCES_BSP)
+SOURCES_LIBS += $(SOURCES_BSP)
 SOURCES_LIBS += $(SOURCES_MBEDTLS)
 
 INCLUDES_LIBS := $(INCLUDES_PDL)
-#INCLUDES_LIBS += $(INCLUDES_BSP)
+INCLUDES_LIBS += $(INCLUDES_BSP)
 INCLUDES_LIBS += $(INCLUDES_MBEDTLS)
 
 #INCLUDE_DIRS_PDL  = cmsis/include devices/include devices/include/ip drivers/include # devices/bsp/COMPONENT_MTB/startup
