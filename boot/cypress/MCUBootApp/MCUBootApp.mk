@@ -30,8 +30,8 @@ include $(CUR_APP_PATH)/targets.mk
 include $(CUR_APP_PATH)/libs.mk
 
 # TODO: add DEFINES in Application
-DEFINES_APP := MBEDTLS_CONFIG_FILE="\"crypto_config_sw.h\""
-DEFINES_APP += $(DEVICE)
+DEFINES_APP := -DMBEDTLS_CONFIG_FILE="\"crypto_config_sw.h\""
+DEFINES_APP += -DMCUBOOT_APP_DEF
 #DEFINES_APP += 
 
 # TODO: MCUBoot library

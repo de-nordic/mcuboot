@@ -65,6 +65,14 @@ else
 	ASM_FILES_BSP := $(STARTUP_FILE).s
 endif
 
+# Add device name from BSP makefile to defines
+DEFINES += $(DEVICE)
+
+# Get defines from BSP makefile and convert it to regular -DMY_NAME style 
+ifneq ($(DEFINES),)
+	DEFINES_BSP=$(addprefix -D,$(DEFINES))
+endif
+
 $(info ==============================================================================)
 $(info = BSP files =)
 $(info ==============================================================================)

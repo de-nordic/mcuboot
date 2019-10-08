@@ -49,13 +49,15 @@ INCLUDE_DIRS += $(INCLUDE_DIRS_LIBS)
 INCLUDES := $(INCLUDES_APP)
 INCLUDES += $(INCLUDES_LIBS)
 
-DEFINES :=
+DEFINES := $(DEFINES_BSP)
 DEFINES += $(DEFINES_APP)
-#DEFINES +=
+DEFINES += -DCUSTOM_DEF
 
-ifneq ($(DEFINES),)
-DEFINES_SOLUTION=$(addprefix -D,$(DEFINES))
-endif
+$(info ==============================================================================)
+$(info = Collected Defines string: =)
+$(info ==============================================================================)
+$(info $(DEFINES))
+#DEFINES +=
 
 #DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
 
