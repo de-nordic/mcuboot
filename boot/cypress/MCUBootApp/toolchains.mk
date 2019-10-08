@@ -62,7 +62,7 @@ ifeq ($(HOST_OS), win)
 	endif
 
 else ifeq ($(HOST_OS), osx)
-	GCC_PATH := /Users/rnok/toolchains/gcc-arm-none-eabi-6
+	GCC_PATH := /Users/$(USERNAME)/toolchains/gcc-arm-none-eabi-6
 
 	CC := "$(GCC_PATH)/bin/arm-none-eabi-gcc"
 	LD := $(CC)
@@ -91,10 +91,18 @@ OBJCOPY  := "$(GCC_PATH)/bin/arm-none-eabi-objcopy"
 
 # Set flags for toolchain executables
 
+BUILDCFG ?= Debug
+
 ifeq ($(COMPILER), GCC)
 	# set build-in compiler flags
-	CFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -Os -mfloat-abi=soft -fno-stack-protector -ffunction-sections -fdata-sections -ffat-lto-objects -fstrict-aliasing -g -Wall -Wextra
-# 	CFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -Og -mfloat-abi=soft -fno-stack-protector -ffunction-sections -fdata-sections -ffat-lto-objects -fstrict-aliasing -g -Wall -Wextra
+	CFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -fno-stack-protector -ffunction-sections -fdata-sections -ffat-lto-objects -fstrict-aliasing -g -Wall -Wextra
+	ifeq ($(BUILDCFG), Debug)
+		CFLAGS_COMMON += -Og
+	else ifeq ($(BUILDCFG), Release)
+		CFLAGS_COMMON += -Os
+	else
+$(error BUILDCFG : '$(BUILDCFG)' is not supported)
+	endif
 	# add defines and includes
 	CFLAGS := $(CFLAGS_COMMON) $(DEFINES) $(INCLUDES)
 	CC_DEPEND = -MD -MP -MF
