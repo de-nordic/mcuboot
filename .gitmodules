@@ -10,3 +10,4 @@
 [submodule "boot/cypress/libs/bsp/TARGET_CY8CPROTO-062-4343W-M0"]
 	path = boot/cypress/libs/bsp/TARGET_CY8CPROTO-062-4343W-M0
 	url = http://git-ore.aus.cypress.com/repo/cy_mcuboot_project/TARGET_CY8CPROTO-062-4343W-M0
+	branch = rnok/m0-port
