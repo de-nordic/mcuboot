@@ -21,6 +21,9 @@
  * boot/zephyr/include/mcuboot_config/mcuboot_config.h
  * boot/mynewt/mcuboot_config/include/mcuboot_config/mcuboot_config.h
  */
+/* Default maximum number of flash sectors per image slot; change
+ * as desirable. */
+#define MCUBOOT_MAX_IMG_SECTORS 128
 
 /*
  * Signature types
@@ -61,7 +64,7 @@
  */
 
 /* Uncomment to use ARM's mbedCrypto cryptographic primitives */
-#define MCUBOOT_USE_MBEDCRYPTO
+#define MCUBOOT_USE_MBED_TLS
 /* Uncomment to use Tinycrypt's. */
 /* #define MCUBOOT_USE_TINYCRYPT */
 
