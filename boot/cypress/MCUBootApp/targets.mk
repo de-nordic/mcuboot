@@ -50,11 +50,10 @@ SOURCES_BSP := $(wildcard $(BSP_PATH)/COMPONENT_BSP_DESIGN_MODUS/GeneratedSource
 SOURCES_BSP += $(BSP_PATH)/startup/system_psoc6_cm0plus.c
 SOURCES_BSP += $(BSP_PATH)/cybsp.c
 
-# Collect header files for TARGET BSP
-INCLUDES_BSP := $(wildcard $(BSP_PATH)/COMPONENT_BSP_DESIGN_MODUS/GeneratedSource/*.h)
-INCLUDES_BSP += $(BSP_PATH)/startup/system_psoc6.h
-INCLUDES_BSP += $(BSP_PATH)/cybsp_types.h
-INCLUDES_BSP += $(BSP_PATH)/cybsp.h
+# Collect dirrectories containing headers for TARGET BSP
+INCLUDE_DIRS_BSP := $(BSP_PATH)/COMPONENT_BSP_DESIGN_MODUS/GeneratedSource/
+INCLUDE_DIRS_BSP += $(BSP_PATH)/startup
+INCLUDE_DIRS_BSP += $(BSP_PATH)
 
 # Collect Assembler files for TARGET BSP
 STARTUP_FILE := $(BSP_PATH)/startup/TOOLCHAIN_$(COMPILER)/startup_psoc6_02_cm0plus
@@ -73,11 +72,12 @@ ifneq ($(DEFINES),)
 	DEFINES_BSP=$(addprefix -D,$(DEFINES))
 endif
 
+LINKER_SCRIPT := $(CHIP_SERIES).ld
+
 $(info ==============================================================================)
 $(info = BSP files =)
 $(info ==============================================================================)
 $(info $(SOURCES_BSP))
-$(info $(INCLUDES_BSP))
 $(info $(ASM_FILES_BSP))
 
 # TODO: include appropriate BSP sources

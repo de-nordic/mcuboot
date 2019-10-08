@@ -37,20 +37,16 @@ SOURCES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/library/*.c)
 INCLUDE_DIRS_PDL := $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/include
 INCLUDE_DIRS_MBEDTLS := $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls
 
-INCLUDES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/include/*.h)
-INCLUDES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h) 
+#INCLUDES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/include/*.h)
+#INCLUDES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h) 
  
 SOURCES_LIBS := $(SOURCES_PDL)
 SOURCES_LIBS += $(SOURCES_BSP)
 SOURCES_LIBS += $(SOURCES_MBEDTLS)
 
-INCLUDE_DIRS_LIBS := $(INCLUDE_DIRS_PDL)
-INCLUDE_DIRS_LIBS += $(INCLUDE_DIRS_BSP)
-INCLUDE_DIRS_LIBS += $(INCLUDE_DIRS_MBEDTLS)
-
-INCLUDES_LIBS := $(INCLUDES_PDL)
-INCLUDES_LIBS += $(INCLUDES_BSP)
-INCLUDES_LIBS += $(INCLUDES_MBEDTLS)
+INCLUDE_DIRS_LIBS := $(addprefix -I,$(INCLUDE_DIRS_PDL))
+INCLUDE_DIRS_LIBS += $(addprefix -I,$(INCLUDE_DIRS_BSP))
+INCLUDE_DIRS_LIBS += $(addprefix -I,$(INCLUDE_DIRS_MBEDTLS))
 
 #INCLUDE_DIRS_PDL  = cmsis/include devices/include devices/include/ip drivers/include # devices/bsp/COMPONENT_MTB/startup
 

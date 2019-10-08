@@ -110,7 +110,6 @@ $(error BUILDCFG : '$(BUILDCFG)' is not supported)
 	CC_DEPEND = -MD -MP -MF
 
 # TODO: create Application-Specific Linker
-	LINKER_SCRIPT := $(CHIP_SERIES).ld
 
 	LDFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -specs=nano.specs -ffunction-sections -fdata-sections  -Wl,--gc-sections -L "$(GCC_PATH)/lib/gcc/arm-none-eabi/7.2.1/thumb/v6-m" -fwhole-program
 	ifeq ($(BUILDCFG), Debug)
