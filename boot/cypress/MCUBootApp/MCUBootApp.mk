@@ -30,13 +30,20 @@ include $(CUR_APP_PATH)/libs.mk
 include $(CUR_APP_PATH)/toolchains.mk
 
 # TODO: add DEFINES in Application
+DEFINES_APP := MBEDTLS_CONFIG_FILE="\"crypto_config_sw.h\""
 
 # TODO: MCUBoot library
 SOURCES_MCUBOOT := $(wildcard $(CURDIR)/../bootutil/src/*.c)
-INCLUDES_MCUBOOT := $(wildcard $(CURDIR)/../bootutil/include/bootutil/*.h)
 
 SOURCES_APP := $(wildcard $(CUR_APP_PATH)/*.c)
 SOURCES_APP += $(SOURCES_MCUBOOT)
+
+INCLUDES_DIRS_MCUBOOT := $(CURDIR)/../bootutil/include/bootutil
+
+INCLUDE_DIRS_APP := $(CUR_APP_PATH)
+INCLUDE_DIRS_APP += $(INCLUDES_DIRS_MCUBOOT)
+
+INCLUDES_MCUBOOT := $(wildcard $(CURDIR)/../bootutil/include/bootutil/*.h) 
 
 INCLUDES_APP := $(wildcard $(CUR_APP_PATH)/*.h)
 INCLUDES_APP += $(wildcard $(CUR_APP_PATH)/config/*.h)

@@ -45,6 +45,9 @@ endif
 SOURCES_BSP :=
 #SOURCES_BSP +=
 
+INCLUDE_DIRS_BSP :=
+#INCLUDE_DIRS_BSP +=  
+
 INCLUDES_BSP :=
 #INCLUDES_BSP := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h)
 INCLUDES_BSP +=
