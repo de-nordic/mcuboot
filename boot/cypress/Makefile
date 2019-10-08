@@ -48,9 +48,8 @@ INCLUDE_DIRS += $(INCLUDE_DIRS_LIBS)
 
 INCLUDES := $(INCLUDES_APP)
 INCLUDES += $(INCLUDES_LIBS)
- 
-O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
 
+DEFINES :=
 DEFINES += $(DEFINES_APP)
 #DEFINES +=
 
@@ -99,10 +98,10 @@ OUT := ./out
 #ASM_FILES += $(ASM_FILES_PDL)
 #C_FILES := $(SOURCES_CRYPTOLIB) $(SOURCES_MBED_CRYPTO) $(SOURCES_JWT) $(SOURCES_BSP) $(SOURCES_PDL) $(SOURCES_FB)
 #C_FILES += $(wildcard hal/*.c)
-#O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
-#
-#VPATH = $(dir $(C_FILES) $(ASM_FILES))
-#
+O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
+
+VPATH = $(dir $(C_FILES) $(ASM_FILES))
+
 ## Set colors for unix compatible terminals, otherwise comment this code
 #ifeq ($(JENKINS), yes)
 #	COLOR_RESET    = \033[0m
@@ -148,7 +147,7 @@ all: clean app
 app:
 	@`mkdir -p ./$(APP_NAME)/out`
 	@`mkdir -p ./$(APP_NAME)/out/obj`
-#	@`mkdir -p ./$(APP_NAME)/out/obj/$@`
+	@`mkdir -p ./$(APP_NAME)/out/obj/$@`
 	$(MAKE) build -j4
 
 #all: target_psoc6_ble2 target_psoc6_2m target_psoc6_2m_psvp
@@ -176,19 +175,18 @@ app:
 #
 #
 ## Build target
+#build: $(OUT)/$(APP_NAME)_CM0p.hex
+#	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/$(APP_NAME)_CM0p.elf
 build:
-#build: $(OUT)/flashboot_$(SUFFIX_FAMILY).hex
-#	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/flashboot_$(SUFFIX_FAMILY).elf
-
-#$(OUT)/flashboot_$(SUFFIX_FAMILY).hex: $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ1.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf
+#$(OUT)/$(APP_NAME)_CM0p.hex: $(OUT)/$(APP_NAME)_CM0p_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ1.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf
 #	$(PDL_ELFTOOL) --sign $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf --output $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf
-#	$(PDL_ELFTOOL) --sign $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf --output $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf
-#	$(PDL_ELFTOOL) --merge $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf --output $(OUT)/flashboot_$(SUFFIX_FAMILY).elf
-#	$(PDL_ELFTOOL) --merge $(OUT)/flashboot_$(SUFFIX_FAMILY).elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ1.elf --output $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf --hex $(OUT)/flashboot_$(SUFFIX_FAMILY).hex
-#	$(PDL_ELFTOOL) --merge $(OUT)/flashboot_$(SUFFIX_FAMILY).elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf --output $(OUT)/flashboot_$(SUFFIX_FAMILY)2_link.elf --hex $(OUT)/flashboot_$(SUFFIX_FAMILY)_cm0open.hex
-#	$(OBJDUMP) -h -S $(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf > $(OUT)/flashboot_$(SUFFIX_FAMILY).asm
+#	$(PDL_ELFTOOL) --sign $(OUT)/$(APP_NAME)_CM0p_link.elf --output $(OUT)/$(APP_NAME)_CM0p_link.elf
+#	$(PDL_ELFTOOL) --merge $(OUT)/$(APP_NAME)_CM0p_link.elf $(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf --output $(OUT)/$(APP_NAME)_CM0p.elf
+#	$(PDL_ELFTOOL) --merge $(OUT)/$(APP_NAME)_CM0p.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ1.elf --output $(OUT)/$(APP_NAME)_CM0p_link.elf --hex $(OUT)/$(APP_NAME)_CM0p.hex
+#	$(PDL_ELFTOOL) --merge $(OUT)/$(APP_NAME)_CM0p.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf --output $(OUT)/$(APP_NAME)_CM0p2_link.elf --hex $(OUT)/$(APP_NAME)_CM0p_cm0open.hex
+#	$(OBJDUMP) -h -S $(OUT)/$(APP_NAME)_CM0p_link.elf > $(OUT)/$(APP_NAME)_CM0p.asm
 #
-#$(OUT)/flashboot_$(SUFFIX_FAMILY)_link.elf: $(addprefix $(OUT)/obj/$(TARGET)/, $(O_FILES))
+#$(OUT)/$(APP_NAME)_CM0p_link.elf: $(addprefix $(OUT)/obj/$(TARGET)/, $(O_FILES))
 #	@# the first  line prints a command
 #	@# the second line executes the command and prints the command's stdout and stderr with colors
 #	@echo $(LD) $(O_FILES) -o $@ $(LDFLAGS)
@@ -209,29 +207,21 @@ build:
 #	$(LD) $(OUT)/obj/$(TARGET)/fb_policy_templ2.o -o $@ $(LDFLAGS_TEMPL) $(COLOR_OUTPUT)
 #	$(OBJDUMP) -h -S $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf > $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.asm
 #
-#$(OUT)/obj/$(TARGET)/%.o: %.c
-#	@echo $(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
-#	@$(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@ $(COLOR_OUTPUT)
-#	@echo
-#
-#$(OUT)/obj/$(TARGET)/%.o: %.s
-#ifeq ($(COMPILER), GCC)
-#	@echo @$(CC) $(CFLAGS) -c $< -o $@
-#	@$(CC) $(CFLAGS) -c $< -o $@ $(COLOR_OUTPUT)
-#else
-#	@echo $(AS) $< -o $@ $(AS_FLAGS)
-#	@$(AS) $< -o $@ $(AS_FLAGS) $(COLOR_OUTPUT)
-#endif
-#	@echo
-#
-#$(info DEBUG_MESSAGE_1:)
-#$(info $(COMPILER))
 
-#$(OUT)/obj/$(TARGET)/%.o: %.S
+$(OUT)/$(APP_NAME)_CM0p.elf : ./$(APP_NAME)/main.c
+	$(CC) $(CFLAGS)  -c main.c -o $(OUT)/obj/$(TARGET)/main.o
+	$(LD) $(OUT)/obj/$(TARGET)/main.o -o $@ $(LDFLAGS_TEMPL) $(COLOR_OUTPUT)
+#	$(OBJDUMP) -h -S $(OUT)/$(APP_NAME)_CM0p.elf > $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.asm
 
+$(OUT)/obj/$(TARGET)/%.o: %.c
+	@echo $(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
+	@$(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@ $(COLOR_OUTPUT)
+	@echo
+
+$(OUT)/obj/$(TARGET)/%.o: %.s
 ifeq ($(COMPILER), GCC)
 	@echo @$(CC) $(CFLAGS) -c $< -o $@
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@ $(COLOR_OUTPUT)
 else
 	@echo $(AS) $< -o $@ $(AS_FLAGS)
 	@$(AS) $< -o $@ $(AS_FLAGS) $(COLOR_OUTPUT)
