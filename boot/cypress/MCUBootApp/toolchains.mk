@@ -107,16 +107,20 @@ $(error BUILDCFG : '$(BUILDCFG)' is not supported)
 	CFLAGS := $(CFLAGS_COMMON) $(DEFINES) $(INCLUDES)
 	CC_DEPEND = -MD -MP -MF
 
+# TODO: create Application-Specific Linker
 	LINKER_SCRIPT := $(CHIP_SERIES).ld
-#	LINKER_SCRIPT_CM4 := psoc6a_cm4.ld
-#	LINKER_SCRIPT_TEMPL := psoc6a_policy_templ.ld
 
-	LDFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -Os -specs=nano.specs -ffunction-sections -fdata-sections  -Wl,--gc-sections -L "$(GCC_PATH)/lib/gcc/arm-none-eabi/7.2.1/thumb/v6-m" -fwhole-program
-# 	LDFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -Og -specs=nano.specs -ffunction-sections -fdata-sections  -Wl,--gc-sections -L "$(GCC_PATH)/lib/gcc/arm-none-eabi/7.2.1/thumb/v6-m" -fwhole-program
+	LDFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -specs=nano.specs -ffunction-sections -fdata-sections  -Wl,--gc-sections -L "$(GCC_PATH)/lib/gcc/arm-none-eabi/7.2.1/thumb/v6-m" -fwhole-program
+	ifeq ($(BUILDCFG), Debug)
+		LDFLAGS_COMMON += -Og
+	else ifeq ($(BUILDCFG), Release)
+		LDFLAGS_COMMON += -Os
+	else
+$(error BUILDCFG : '$(BUILDCFG)' is not supported)
+	endif
 	LDFLAGS_NANO := -L "$(GCC_PATH)/arm-none-eabi/lib/thumb/v6-m"
-	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_NANO) -T ./$(LINKER_SCRIPT) -Wl,-Map,$(OUT)/flashboot_$(SUFFIX_FAMILY).map
-#	LDFLAGS_CM4 := $(LDFLAGS_COMMON) -T ./$(LINKER_SCRIPT_CM4) -Wl,-Map,$(OUT)/flashboot_$(SUFFIX_FAMILY)_cm4.map
-#	LDFLAGS_TEMPL := $(LDFLAGS_COMMON) -T ./$(LINKER_SCRIPT_TEMPL) -Wl,-Map,$(OUT)/flashboot_$(SUFFIX_FAMILY)_policy_templ.map
+	# TODO: check .map name
+	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_NANO) -T ./$(LINKER_SCRIPT) -Wl,-Map,$(OUT)/$(APP_NAME)_$(SUFFIX_FAMILY).map
 
 else ifeq ($(COMPILER), IAR)
 
@@ -128,15 +132,9 @@ else ifeq ($(COMPILER), IAR)
 	AS_FLAGS := -s+ "-M<>" -w+ -r --cpu Cortex-M0+ --fpu None -S
 
 	LINKER_SCRIPT := $(CHIP_SERIES).icf
-	#LINKER_SCRIPT_CM4 := psoc6a_cm4.icf
-	#LINKER_SCRIPT_TEMPL := $(CHIP_SERIES)_policy_templ.icf
-
+	
 	#options to extend stack analize: --log call_graph --log_file $(OUT)/stack_usage_$(SUFFIX).txt
 	LDFLAGS_STACK_USAGE := --stack_usage_control $(STACK_CONTROL_FILE) --diag_suppress=Ls015 --diag_suppress=Ls016
 	LDFLAGS_COMMON := --vfe --text_out locale --silent --inline --merge_duplicate_sections
-	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_STACK_USAGE) --config $(LINKER_SCRIPT) --map $(OUT)/flashboot_$(SUFFIX_FAMILY).map --entry Cy_FB_ResetHandler --no_exceptions
-	#LDFLAGS_CM4 := $(LDFLAGS_COMMON) --no_entry --config $(LINKER_SCRIPT_CM4) --map $(OUT)/flashboot_$(SUFFIX_FAMILY)_cm4.map --no_exceptions
-	#LDFLAGS_TEMPL := $(LDFLAGS_COMMON) --no_entry --config $(LINKER_SCRIPT_TEMPL) --map $(OUT)/flashboot_$(SUFFIX_FAMILY)_policy_templ.map --no_exceptions
-
+	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_STACK_USAGE) --config $(LINKER_SCRIPT) --map $(OUT)/$(APP_NAME)_$(SUFFIX_FAMILY).map --entry Cy_FB_ResetHandler --no_exceptions
 endif
-

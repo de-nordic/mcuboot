@@ -28,14 +28,14 @@
 ################################################################################
 
 # default TARGET
-APP ?= MCUBootApp
+APP_NAME ?= MCUBootApp
 #
 APPS := MCUBootApp
 
-ifneq ($(filter $(APP), $(APPS)),)
-include ./$(APP)/$(APP).mk
+ifneq ($(filter $(APP_NAME), $(APPS)),)
+include ./$(APP_NAME)/$(APP_NAME).mk
 else
-$(error Not supported application: '$(APP)')
+$(error Not supported application: '$(APP_NAME)')
 endif
 
 ASM_FILES := $(ASM_FILES_PDL)
@@ -52,7 +52,6 @@ INCLUDES += $(INCLUDES_LIBS)
 O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
 
 DEFINES := $(DEFINES_APP)
-DEFINES += $(DEVICE)
 #DEFINES +=
 
 #DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
