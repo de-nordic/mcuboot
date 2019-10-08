@@ -38,6 +38,18 @@ else
 $(error Not supported application: '$(APP)')
 endif
 
+ASM_FILES := $(ASM_FILES_PDL)
+
+C_FILES := $(SOURCES_APP)
+C_FILES += $(SOURCES_LIBS)
+
+INCLUDES := $(INCLUDES_APP)
+INCLUDES += $(INCLUDES_LIBS)
+ 
+O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
+
+#DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
+
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)
 #OUT := ./out
@@ -240,3 +252,10 @@ endif
 #endif
 #	@echo
 
+#$(info $(ASM_FILES))
+
+$(info $(C_FILES))
+
+$(info $(INCLUDES))
+
+#$(info $(O_FILES))

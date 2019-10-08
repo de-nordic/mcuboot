@@ -23,6 +23,13 @@
 # limitations under the License.
 ################################################################################
 
-include $(CURDIR)/$(APP)/targets.mk
+CUR_APP_PATH = $(CURDIR)/$(APP)
+
+include $(CUR_APP_PATH)/targets.mk
+include $(CUR_APP_PATH)/libs.mk
+
 #include $(CURDIR)/toolchains.mk
-#include $(CURDIR)/libs.mk
+
+SOURCES_APP := $(wildcard $(CUR_APP_PATH)/*.c)
+INCLUDES_APP := $(wildcard $(CUR_APP_PATH)/*.h)
+INCLUDES_APP += $(wildcard $(CUR_APP_PATH)/config/*.h)
