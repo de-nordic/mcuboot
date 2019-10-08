@@ -47,17 +47,12 @@ INCLUDE_DIRS := $(INCLUDE_DIRS_APP)
 INCLUDE_DIRS += $(INCLUDES_DIRS_MCUBOOT)
 INCLUDE_DIRS += $(INCLUDE_DIRS_LIBS)
 
-<<<<<<< HEAD
-INCLUDES := $(INCLUDES_APP)
-INCLUDES += $(INCLUDES_LIBS)
-=======
 $(info ==============================================================================)
 $(info = Directories to look for header files: =)
 $(info ==============================================================================)
 $(info $(INCLUDE_DIRS))
 
 O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
->>>>>>> Improved includes organization
 
 DEFINES := $(DEFINES_BSP)
 DEFINES += $(DEFINES_APP)
