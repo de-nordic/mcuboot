@@ -36,21 +36,41 @@ TARGET ?= CY8CPROTO-062-4343W-M0
 #
 TARGETS := CY8CPROTO-062-4343W-M0 CY8CKIT-062-WIFI-BT-M0
 
+CUR_LIBS_PATH := $(CURDIR)/libs
+BSP_PATH  := $(CUR_LIBS_PATH)/bsp/TARGET_$(TARGET)
+
 ifneq ($(filter $(TARGET), $(TARGETS)),)
 include ./libs/bsp/TARGET_$(TARGET)/$(TARGET).mk
 else
 $(error Not supported target: '$(TARGET)')
 endif
 
-SOURCES_BSP :=
-#SOURCES_BSP +=
+# Collect C source files for TARGET BSP
+SOURCES_BSP := $(wildcard $(BSP_PATH)/COMPONENT_BSP_DESIGN_MODUS/GeneratedSource/*.c)
+SOURCES_BSP += $(BSP_PATH)/startup/system_psoc6_cm0plus.c
+SOURCES_BSP += $(BSP_PATH)/cybsp.c
 
-INCLUDE_DIRS_BSP :=
-#INCLUDE_DIRS_BSP +=  
+# Collect header files for TARGET BSP
+INCLUDES_BSP := $(wildcard $(BSP_PATH)/COMPONENT_BSP_DESIGN_MODUS/GeneratedSource/*.h)
+INCLUDES_BSP += $(BSP_PATH)/startup/system_psoc6.h
+INCLUDES_BSP += $(BSP_PATH)/cybsp_types.h
+INCLUDES_BSP += $(BSP_PATH)/cybsp.h
 
-INCLUDES_BSP :=
-#INCLUDES_BSP := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h)
-INCLUDES_BSP +=
+# Collect Assembler files for TARGET BSP
+STARTUP_FILE := $(BSP_PATH)/startup/TOOLCHAIN_$(COMPILER)/startup_psoc6_02_cm0plus
+
+ifeq ($(COMPILER), GCC_ARM)
+	ASM_FILES_BSP := $(STARTUP_FILE).S
+else
+	ASM_FILES_BSP := $(STARTUP_FILE).s
+endif
+
+$(info ==============================================================================)
+$(info = BSP files =)
+$(info ==============================================================================)
+$(info $(SOURCES_BSP))
+$(info $(INCLUDES_BSP))
+$(info $(ASM_FILES_BSP))
 
 # TODO: include appropriate BSP sources
 # TODO: include appropriate BSP headers

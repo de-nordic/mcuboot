@@ -24,13 +24,15 @@
 ################################################################################
 
 # Compilers
-GCC   := 1
-IAR   := 2
-ARM   := 3
-OTHER := 4
+GCC_ARM   	:= 1
+IAR   		:= 2
+ARM   		:= 3
+OTHER 		:= 4
 
 # Set default compiler to GCC if not specified from command line
-COMPILER ?= GCC
+COMPILER ?= GCC_ARM
+
+$(info $(COMPILER))
 
 # Detect host OS to make resolving compiler pathes easier
 UNAME_S := $(shell uname -s)
@@ -47,7 +49,7 @@ endif
 # Path to the compiler installation
 # NOTE: Absolute pathes for now for the sake of development
 ifeq ($(HOST_OS), win)
-	ifeq ($(COMPILER), GCC)
+	ifeq ($(COMPILER), GCC_ARM)
 		GCC_PATH := c:\Users\$(USERNAME)\ModusToolbox_1.0\tools\gcc-7.2.1-1.0
 		# executables
 		CC       := "$(GCC_PATH)/bin/arm-none-eabi-gcc"
@@ -77,7 +79,7 @@ endif
 PDL_ELFTOOL := "hal/tools/$(HOST_OS)/elf/cymcuelftool"
 
 # Set executable names for compilers
-ifeq ($(COMPILER), GCC)
+ifeq ($(COMPILER), GCC_ARM)
 	CC       := "$(GCC_PATH)/bin/arm-none-eabi-gcc"
 	LD       := $(CC)
 else
@@ -93,7 +95,7 @@ OBJCOPY  := "$(GCC_PATH)/bin/arm-none-eabi-objcopy"
 
 BUILDCFG ?= Debug
 
-ifeq ($(COMPILER), GCC)
+ifeq ($(COMPILER), GCC_ARM)
 	# set build-in compiler flags
 	CFLAGS_COMMON := -mcpu=cortex-m0plus -mthumb -mfloat-abi=soft -fno-stack-protector -ffunction-sections -fdata-sections -ffat-lto-objects -fstrict-aliasing -g -Wall -Wextra
 	ifeq ($(BUILDCFG), Debug)

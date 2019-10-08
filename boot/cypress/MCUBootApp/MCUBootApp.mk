@@ -25,9 +25,9 @@
 
 CUR_APP_PATH = $(CURDIR)/$(APP_NAME)
 
+include $(CUR_APP_PATH)/toolchains.mk
 include $(CUR_APP_PATH)/targets.mk
 include $(CUR_APP_PATH)/libs.mk
-include $(CUR_APP_PATH)/toolchains.mk
 
 # TODO: add DEFINES in Application
 DEFINES_APP := MBEDTLS_CONFIG_FILE="\"crypto_config_sw.h\""
