@@ -64,7 +64,7 @@ ifeq ($(HOST_OS), win)
 	endif
 
 else ifeq ($(HOST_OS), osx)
-	GCC_PATH := /Users/$(USERNAME)/toolchains/gcc-arm-none-eabi-6
+	GCC_PATH := /Users/$(USER)/toolchains/gcc-arm-none-eabi-6
 
 	CC := "$(GCC_PATH)/bin/arm-none-eabi-gcc"
 	LD := $(CC)

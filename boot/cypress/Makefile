@@ -59,17 +59,17 @@ DEFINES += $(DEFINES_APP)
 DEFINES += $(DEFINES_PDL)
 DEFINES += -DCUSTOM_DEF
 
-#$(info ==============================================================================)
-#$(info = Collected Defines string: =)
-#$(info ==============================================================================)
-#$(info $(DEFINES))
-#DEFINES +=
+$(info ==============================================================================)
+$(info = Collected Defines string: =)
+$(info ==============================================================================)
+$(info $(DEFINES))
+DEFINES +=
 
 #DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
 
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)
-OUT := ./$(APP_NAME)/out
+OUT := ./out
 #
 #ifeq ($(CY_BUILD_NUMBER), )
 #	# may be useful when building from a command line on a local machine
@@ -147,16 +147,56 @@ VPATH = $(dir $(C_FILES) $(ASM_FILES))
 #endif
 #
 #
-##.PHONY: all clean app build postbuild
-.PHONY: all clean app build
+.PHONY: MCUBootApp
 
-all: clean app
+MCUBootApp:
+	@`mkdir -p ./out`
+	@`mkdir -p ./out/obj`
+	@`mkdir -p ./out/obj/$@`
+	$(MAKE) build TARGET=$(TARGET) APP=$(APP_NAME) -j8
 
-app:
-	@`mkdir -p $(OUT)`
-	@`mkdir -p $(OUT)/obj`
-	@`mkdir -p $(OUT)/obj/$@`
-	$(MAKE) build -j4
+build: $(OUT)/$(APP_NAME).hex
+	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/$(APP_NAME).elf
+
+$(OUT)/$(APP_NAME).hex: $(OUT)/$(APP_NAME).elf
+	$(GCC_PATH)/bin/arm-none-eabi-objcopy $(OUT)/$(APP_NAME).elf -O ihex $(OUT)/$(APP_NAME).hex
+
+$(OUT)/$(APP_NAME).elf: $(addprefix $(OUT)/obj/$(APP_NAME)/, $(O_FILES))
+	echo "We are here "
+	@# the first  line prints a command
+	@# the second line executes the command and prints the command's stdout and stderr with colors
+	@echo $(LD) $(O_FILES) -o $@ $(LDFLAGS)
+	@$(LD) $(addprefix $(OUT)/obj/$(APP_NAME)/, $(O_FILES)) -o $@ $(LDFLAGS)
+
+
+$(OUT)/obj/$(APP_NAME)/%.o: %.c
+	@echo $(CC) $(CFLAGS) $(INCLUDE_DIRS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
+	@ech
+
+$(OUT)/obj/$(APP_NAME)/%.o: %.s
+ifeq ($(COMPILER), GCC_ARM)
+	@echo @$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+else
+	@echo $(AS) $< -o $@ $(AS_FLAGS)
+	@$(AS) $< -o $@ $(AS_FLAGS)
+endif
+	@echo
+
+$(OUT)/obj/$(APP_NAME)/%.o: %.S
+ifeq ($(COMPILER), GCC_ARM)
+	@echo @$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+else
+	@echo $(AS) $< -o $@ $(AS_FLAGS)
+	@$(AS) $< -o $@ $(AS_FLAGS)
+endif
+	@echo
+
+
+clean:
+	rm -rf ./$(APP_NAME)/out
 
 #all: target_psoc6_ble2 target_psoc6_2m target_psoc6_2m_psvp
 #
@@ -183,7 +223,7 @@ app:
 #
 #
 ## Build target
-build: 
+#build: 
 
 #	$(OUT)/$(APP_NAME)_CM0p.hex
 #	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/$(APP_NAME)_CM0p.elf
@@ -197,11 +237,11 @@ build:
 #	$(PDL_ELFTOOL) --merge $(OUT)/$(APP_NAME)_CM0p.elf $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.elf --output $(OUT)/$(APP_NAME)_CM0p2_link.elf --hex $(OUT)/$(APP_NAME)_CM0p_cm0open.hex
 #	$(OBJDUMP) -h -S $(OUT)/$(APP_NAME)_CM0p_link.elf > $(OUT)/$(APP_NAME)_CM0p.asm
 #
-$(OUT)/$(APP_NAME)_CM0p.elf: $(addprefix $(OUT)/obj/, $(O_FILES))
-	@# the first  line prints a command
-	@# the second line executes the command and prints the command's stdout and stderr with colors
-	@echo $(LD) $(O_FILES) -o $@ $(LDFLAGS)
-	@$(LD) $(addprefix $(OUT)/obj/, $(O_FILES)) -o $@ $(LDFLAGS)
+# $(OUT)/$(APP_NAME)_CM0p.elf: $(addprefix $(OUT)/obj/, $(O_FILES))
+# 	@# the first  line prints a command
+# 	@# the second line executes the command and prints the command's stdout and stderr with colors
+# 	@echo $(LD) $(O_FILES) -o $@ $(LDFLAGS)
+# 	@$(LD) $(addprefix $(OUT)/obj/, $(O_FILES)) -o $@ $(LDFLAGS)
 #
 #$(OUT)/fb_$(SUFFIX_FAMILY)_cm4_link.elf : fb_cm4.c
 #	$(CC) $(CFLAGS)  -c fb_cm4.c -o $(OUT)/obj/$(TARGET)/fb_cm4.o
@@ -224,23 +264,23 @@ $(OUT)/$(APP_NAME)_CM0p.elf: $(addprefix $(OUT)/obj/, $(O_FILES))
 #	$(LD) $(OUT)/obj/main.o -o $@ $(LDFLAGS_TEMPL) $(COLOR_OUTPUT)
 ##	$(OBJDUMP) -h -S $(OUT)/$(APP_NAME)_CM0p.elf > $(OUT)/fb_$(SUFFIX_FAMILY)_policy_templ2.asm
 
-$(OUT)/obj/%.o: %.c
-	@echo $(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
-	@$(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@ $(COLOR_OUTPUT)
-	@echo
+# $(OUT)/obj/%.o: %.c
+# 	@echo $(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
+# 	@$(CC) $(CFLAGS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@ $(COLOR_OUTPUT)
+# 	@echo
 
-$(OUT)/obj/%.o: %.s
-ifeq ($(COMPILER), GCC)
-	@echo @$(CC) $(CFLAGS) -c $< -o $@
-	@$(CC) $(CFLAGS) -c $< -o $@ $(COLOR_OUTPUT)
-else
-	@echo $(AS) $< -o $@ $(AS_FLAGS)
-	@$(AS) $< -o $@ $(AS_FLAGS) $(COLOR_OUTPUT)
-endif
-	@echo
+# $(OUT)/obj/%.o: %.s
+# ifeq ($(COMPILER), GCC)
+# 	@echo @$(CC) $(CFLAGS) -c $< -o $@
+# 	@$(CC) $(CFLAGS) -c $< -o $@ $(COLOR_OUTPUT)
+# else
+# 	@echo $(AS) $< -o $@ $(AS_FLAGS)
+# 	@$(AS) $< -o $@ $(AS_FLAGS) $(COLOR_OUTPUT)
+# endif
+# 	@echo
 
-clean:
-	rm -rf ./$(APP_NAME)/out
+# clean:
+# 	rm -rf ./$(APP_NAME)/out
 
 # DEBUG PRINT
 #$(info $(ASM_FILES))

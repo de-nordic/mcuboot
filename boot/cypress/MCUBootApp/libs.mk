@@ -30,48 +30,33 @@ PDL_VERSION = 121
 #
 CUR_LIBS_PATH = $(CURDIR)/libs
 
+# Collect source files for PDL
 SOURCES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/source/*.c)
 SOURCES_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/devices/bsp/COMPONENT_MTB/startup/system_psoc6_cm0plus.c
-SOURCES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/library/*.c)
 
+# Collect source files for MbedTLS
+SOURCES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/library/*.c)
+
+# PDL related include directories
 INCLUDE_DIRS_PDL := $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/include
-INCLUDE_DIRS_MBEDTLS := $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls
+INCLUDE_DIRS_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/devices/include/
+INCLUDE_DIRS_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/devices/include/ip
+INCLUDE_DIRS_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/cmsis/include
+INCLUDE_DIRS_PDL += $(CUR_LIBS_PATH)/bsp/core-lib/include
 
-#INCLUDES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/include/*.h)
-#INCLUDES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/crypto/include/mbedtls/*.h) 
- 
+# MbedTLS related include directories
+INCLUDE_DIRS_MBEDTLS := $(CUR_LIBS_PATH)/mbedtls/include
+INCLUDE_DIRS_MBEDTLS += $(CUR_LIBS_PATH)/mbedtls/include/mbedtls
+
+# Collected source files for libraries
 SOURCES_LIBS := $(SOURCES_PDL)
 SOURCES_LIBS += $(SOURCES_BSP)
 SOURCES_LIBS += $(SOURCES_MBEDTLS)
 
+# Collected include directories for libraries
 INCLUDE_DIRS_LIBS := $(addprefix -I,$(INCLUDE_DIRS_PDL))
 INCLUDE_DIRS_LIBS += $(addprefix -I,$(INCLUDE_DIRS_BSP))
 INCLUDE_DIRS_LIBS += $(addprefix -I,$(INCLUDE_DIRS_MBEDTLS))
 
-#INCLUDE_DIRS_PDL  = cmsis/include devices/include devices/include/ip drivers/include # devices/bsp/COMPONENT_MTB/startup
-
-#ifeq ($(COMPILER), GCC)
-#	ASM_FILES_PDL += $(PDL_PATH)/drivers/source/TOOLCHAIN_GCC_ARM/cy_syslib_gcc.S
-#else
-#	ASM_FILES_PDL += $(PDL_PATH)/drivers/source/TOOLCHAIN_IAR/cy_syslib_iar.s
-#endif
-
-################################################################################
-#
-### In case of PDL ABSOLUTE PATH, PDL_DRIVE variable should be set separately
-# PDL_DRIVE = /c
-# PDL_PATH = /c/cy-work/git/crypto/fws-532/psoc6pdl
-################################################################################
-# SOURCES_PDL_ALLDRV  = $(wildcard $(PDL_PATH)/drivers/source/*.c)
-# SOURCES_PDL_CRYPTO  = $(wildcard $(PDL_PATH)/drivers/source/cy_crypto*.c)
-# SOURCES_PDL_DRIVERS = $(filter-out $(SOURCES_PDL_CRYPTO), $(SOURCES_PDL_ALLDRV))
-
-#SOURCE_FILES_PDL  = $(wildcard $(PDL_PATH)/drivers/source/*.c)
-
-
-##INCLUDES_PDL = $(addprefix -I$(PDL_DRIVE)$(PDL_PATH)/, $(INCLUDE_DIRS_PDL))
-#INCLUDES_PDL = $(addprefix -I$(PDL_PATH)/, $(INCLUDE_DIRS_PDL))
-#SOURCES_PDL  = $(SOURCE_FILES_PDL)
+# Add define for PDL version
 DEFINES_PDL += -DPDL_VERSION=$(PDL_VERSION)
-#################################################################################
-#
