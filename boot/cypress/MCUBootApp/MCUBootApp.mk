@@ -23,6 +23,14 @@
 # limitations under the License.
 ################################################################################
 
+# Cypress' MCUBoot Application supports GCC ARM only at this moment 
+# Set default compiler to GCC if not specified from command line
+COMPILER ?= GCC_ARM
+
+ifneq ($(COMPILER), GCC_ARM)
+$(error Only GCC ARM is supported at this moment)
+endif
+
 CUR_APP_PATH = $(CURDIR)/$(APP_NAME)
 
 include $(CUR_APP_PATH)/targets.mk

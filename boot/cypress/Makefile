@@ -48,8 +48,6 @@ INCLUDE_DIRS := $(INCLUDE_DIRS_APP)
 INCLUDE_DIRS += $(INCLUDES_DIRS_MCUBOOT)
 INCLUDE_DIRS += $(INCLUDE_DIRS_LIBS)
 
-
-
 O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
 
 DEFINES := $(DEFINES_APP)
@@ -202,7 +200,6 @@ else
 	@$(AS) $< -o $@ $(AS_FLAGS)
 endif
 	@echo
-
 
 clean:
 	rm -rf ./$(APP_NAME)/out

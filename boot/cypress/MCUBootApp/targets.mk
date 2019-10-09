@@ -72,14 +72,15 @@ DEFINES += $(DEVICE)
 
 # Get defines from BSP makefile and convert it to regular -DMY_NAME style 
 ifneq ($(DEFINES),)
-
-#$(subst -,_,$(DEFINES))
-
-#	DEFINES_BSP=$(addprefix -D,$(DEFINES))
 	DEFINES_BSP :=$(addprefix -D, $(subst -,_,$(DEFINES)))
 endif
 
-LINKER_SCRIPT := $(CHIP_SERIES).ld
+ifeq ($(COMPILER), GCC_ARM)
+#LINKER_SCRIPT := $(wildcard $(BSP_PATH)/linker/TOOLCHAIN_GCC_ARM/*_cm0plus.ld)
+LINKER_SCRIPT := /c/MCUboot/cy_mcuboot/boot/cypress/libs/bsp/TARGET_CY8CPROTO-062-4343W-M0/linker/TOOLCHAIN_GCC_ARM/cy8c6xxa_cm0plus.ld
+else
+$(error Only GCC ARM is supported at this moment)
+endif
 
 ifeq ($(MAKEINFO) , 1)
 $(info ==============================================================================)
@@ -89,7 +90,6 @@ $(info $(SOURCES_BSP))
 $(info $(ASM_FILES_BSP))
 endif
 
-# TODO: include appropriate BSP assembly
 # TODO: include appropriate BSP linker(s)
 # TODO: include appropriate BSP precompiled
 

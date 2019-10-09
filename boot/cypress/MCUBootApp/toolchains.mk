@@ -29,9 +29,6 @@ IAR   		:= 2
 ARM   		:= 3
 OTHER 		:= 4
 
-# Set default compiler to GCC if not specified from command line
-COMPILER ?= GCC_ARM
-
 ifeq ($(MAKEINFO), 1)
 $(info $(COMPILER))
 endif
@@ -122,7 +119,7 @@ $(error BUILDCFG : '$(BUILDCFG)' is not supported)
 	endif
 	LDFLAGS_NANO := -L "$(GCC_PATH)/arm-none-eabi/lib/thumb/v6-m"
 	# TODO: check .map name
-	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_NANO) -T ./$(LINKER_SCRIPT) -Wl,-Map,$(OUT)/$(APP_NAME)_$(SUFFIX_FAMILY).map
+	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_NANO) -T $(LINKER_SCRIPT) -Wl,-Map,$(OUT)/$(APP_NAME)_$(SUFFIX_FAMILY).map
 
 else ifeq ($(COMPILER), IAR)
 
