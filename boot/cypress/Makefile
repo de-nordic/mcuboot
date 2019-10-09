@@ -154,7 +154,7 @@ VPATH = $(dir $(C_FILES) $(ASM_FILES))
 #endif
 #
 #
-.PHONY: all app clean
+.PHONY: all app build clean
 
 all: clean app
 
