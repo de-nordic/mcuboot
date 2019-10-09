@@ -14,3 +14,6 @@
 [submodule "boot/cypress/libs/bsp/core-lib"]
 	path = boot/cypress/libs/bsp/core-lib
 	url = http://git-ore.aus.cypress.com/repo-staging/core-lib.git
+[submodule "boot/cypress/libs/bsp/psoc6hal"]
+	path = boot/cypress/libs/bsp/psoc6hal
+	url = http://git-ore.aus.cypress.com/repo-staging/psoc6hal
