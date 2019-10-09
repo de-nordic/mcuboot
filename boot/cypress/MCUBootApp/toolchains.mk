@@ -32,8 +32,9 @@ OTHER 		:= 4
 # Set default compiler to GCC if not specified from command line
 COMPILER ?= GCC_ARM
 
+ifeq ($(MAKEINFO), 1)
 $(info $(COMPILER))
-
+endif
 # Detect host OS to make resolving compiler pathes easier
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S), Darwin)
@@ -106,7 +107,7 @@ ifeq ($(COMPILER), GCC_ARM)
 $(error BUILDCFG : '$(BUILDCFG)' is not supported)
 	endif
 	# add defines and includes
-	CFLAGS := $(CFLAGS_COMMON) $(DEFINES_SOLUTION) $(INCLUDES)
+	CFLAGS := $(CFLAGS_COMMON) $(INCLUDES)
 	CC_DEPEND = -MD -MP -MF
 
 # TODO: create Application-Specific Linker
@@ -127,7 +128,8 @@ else ifeq ($(COMPILER), IAR)
 
 	CFLAGS := --debug --endian=little --cpu=Cortex-M0+ -e --fpu=None --dlib_config "$(IAR_PATH)\INC\c\DLib_Config_Normal.h"
 	CFLAGS += -Ohz --silent
-	CFLAGS += $(DEFINES_SOLUTION) $(INCLUDES)
+#	CFLAGS += $(DEFINES) $(INCLUDES)
+	CFLAGS += $(INCLUDES)
 	CC_DEPEND = --dependencies
 
 	AS_FLAGS := -s+ "-M<>" -w+ -r --cpu Cortex-M0+ --fpu None -S

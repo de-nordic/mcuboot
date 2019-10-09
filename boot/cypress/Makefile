@@ -27,7 +27,8 @@
 # Main settings
 ################################################################################
 
-# default TARGET
+MAKEINFO ?= 1
+
 APP_NAME ?= MCUBootApp
 #
 APPS := MCUBootApp
@@ -47,29 +48,35 @@ INCLUDE_DIRS := $(INCLUDE_DIRS_APP)
 INCLUDE_DIRS += $(INCLUDES_DIRS_MCUBOOT)
 INCLUDE_DIRS += $(INCLUDE_DIRS_LIBS)
 
+
+
+O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
+
+DEFINES := $(DEFINES_APP)
+DEFINES += $(DEFINES_LIBS)
+DEFINES += -DCUSTOM_DEF
+
+ifeq ($(MAKEINFO), 1)
 $(info ==============================================================================)
 $(info = Directories to look for header files: =)
 $(info ==============================================================================)
 $(info $(INCLUDE_DIRS))
 
-O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
-
-DEFINES := $(DEFINES_BSP)
-DEFINES += $(DEFINES_APP)
-DEFINES += $(DEFINES_PDL)
-DEFINES += -DCUSTOM_DEF
-
 $(info ==============================================================================)
 $(info = Collected Defines string: =)
 $(info ==============================================================================)
 $(info $(DEFINES))
+endif
 DEFINES +=
+
+# updating CFLAGS at this point as DEFINES are completed
+CFLAGS += $(DEFINES)
 
 #DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
 
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)
-OUT := ./out
+OUT := ./$(APP_NAME)/out
 #
 #ifeq ($(CY_BUILD_NUMBER), )
 #	# may be useful when building from a command line on a local machine
@@ -147,12 +154,12 @@ VPATH = $(dir $(C_FILES) $(ASM_FILES))
 #endif
 #
 #
-.PHONY: MCUBootApp
+.PHONY: app clean
 
-MCUBootApp:
-	@`mkdir -p ./out`
-	@`mkdir -p ./out/obj`
-	@`mkdir -p ./out/obj/$@`
+app:
+	@`mkdir -p ./$(OUT)`
+	@`mkdir -p ./$(OUT)/obj`
+	@`mkdir -p ./$(OUT)/obj/$@`
 	$(MAKE) build TARGET=$(TARGET) APP=$(APP_NAME) -j8
 
 build: $(OUT)/$(APP_NAME).hex
@@ -172,7 +179,7 @@ $(OUT)/$(APP_NAME).elf: $(addprefix $(OUT)/obj/$(APP_NAME)/, $(O_FILES))
 $(OUT)/obj/$(APP_NAME)/%.o: %.c
 	@echo $(CC) $(CFLAGS) $(INCLUDE_DIRS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
 	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
-	@ech
+	@echo
 
 $(OUT)/obj/$(APP_NAME)/%.o: %.s
 ifeq ($(COMPILER), GCC_ARM)
@@ -283,16 +290,11 @@ clean:
 # 	rm -rf ./$(APP_NAME)/out
 
 # DEBUG PRINT
-#$(info $(ASM_FILES))
-
-#$(info $(C_FILES))
-#
-#$(info $(INCLUDES))
-#
-#$(info $(INCLUDE_DIRS))
-#
-#$(info $(DEFINES))
-#
-#$(info $(CC))
-
-#$(info $(O_FILES))
+ifeq ($(MAKEINFO) , 1)
+$(info ASM_FILES: $(ASM_FILES))
+$(info C_FILES: $(C_FILES))
+$(info INCLUDES: $(INCLUDES))
+$(info INCLUDE_DIRS: $(INCLUDE_DIRS))
+$(info DEFINES: $(DEFINES))
+$(info CC: $(CC))
+endif

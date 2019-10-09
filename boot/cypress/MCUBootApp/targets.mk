@@ -49,11 +49,14 @@ endif
 SOURCES_BSP := $(wildcard $(BSP_PATH)/COMPONENT_BSP_DESIGN_MODUS/GeneratedSource/*.c)
 SOURCES_BSP += $(BSP_PATH)/startup/system_psoc6_cm0plus.c
 SOURCES_BSP += $(BSP_PATH)/cybsp.c
+SOURCES_BSP += $(CUR_LIBS_PATH)/bsp/psoc6hal/src
+
 
 # Collect dirrectories containing headers for TARGET BSP
 INCLUDE_DIRS_BSP := $(BSP_PATH)/COMPONENT_BSP_DESIGN_MODUS/GeneratedSource/
 INCLUDE_DIRS_BSP += $(BSP_PATH)/startup
 INCLUDE_DIRS_BSP += $(BSP_PATH)
+INCLUDE_DIRS_BSP += $(CUR_LIBS_PATH)/bsp/psoc6hal/include
 
 # Collect Assembler files for TARGET BSP
 STARTUP_FILE := $(BSP_PATH)/startup/TOOLCHAIN_$(COMPILER)/startup_psoc6_02_cm0plus
@@ -69,19 +72,23 @@ DEFINES += $(DEVICE)
 
 # Get defines from BSP makefile and convert it to regular -DMY_NAME style 
 ifneq ($(DEFINES),)
-	DEFINES_BSP=$(addprefix -D,$(DEFINES))
+
+#$(subst -,_,$(DEFINES))
+
+#	DEFINES_BSP=$(addprefix -D,$(DEFINES))
+	DEFINES_BSP :=$(addprefix -D, $(subst -,_,$(DEFINES)))
 endif
 
 LINKER_SCRIPT := $(CHIP_SERIES).ld
 
+ifeq ($(MAKEINFO) , 1)
 $(info ==============================================================================)
 $(info = BSP files =)
 $(info ==============================================================================)
 $(info $(SOURCES_BSP))
 $(info $(ASM_FILES_BSP))
+endif
 
-# TODO: include appropriate BSP sources
-# TODO: include appropriate BSP headers
 # TODO: include appropriate BSP assembly
 # TODO: include appropriate BSP linker(s)
 # TODO: include appropriate BSP precompiled
