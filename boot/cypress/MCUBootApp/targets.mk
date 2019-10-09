@@ -59,12 +59,13 @@ INCLUDE_DIRS_BSP += $(BSP_PATH)
 INCLUDE_DIRS_BSP += $(CUR_LIBS_PATH)/bsp/psoc6hal/include
 
 # Collect Assembler files for TARGET BSP
+# TODO: need to include _01_, _02_ or _03_ depending on device family.
 STARTUP_FILE := $(BSP_PATH)/startup/TOOLCHAIN_$(COMPILER)/startup_psoc6_02_cm0plus
 
 ifeq ($(COMPILER), GCC_ARM)
 	ASM_FILES_BSP := $(STARTUP_FILE).S
 else
-	ASM_FILES_BSP := $(STARTUP_FILE).s
+$(error Only GCC ARM is supported at this moment)
 endif
 
 # Add device name from BSP makefile to defines

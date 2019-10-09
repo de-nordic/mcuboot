@@ -56,3 +56,5 @@ INCLUDE_DIRS_APP += $(addprefix -I, $(CURDIR)/cy_flash_pal)
 INCLUDE_DIRS_APP += $(addprefix -I, $(CUR_APP_PATH))
 INCLUDE_DIRS_APP += $(addprefix -I, $(CUR_APP_PATH)/config)
 INCLUDE_DIRS_APP += $(addprefix -I, $(CUR_APP_PATH)/os)
+
+ASM_FILES_APP :=

@@ -39,7 +39,8 @@ else
 $(error Not supported application: '$(APP_NAME)')
 endif
 
-ASM_FILES := $(ASM_FILES_PDL)
+ASM_FILES := $(ASM_FILES_APP)
+ASM_FILES += $(ASM_FILES_LIBS)
 
 C_FILES := $(SOURCES_APP)
 C_FILES += $(SOURCES_LIBS)
@@ -191,15 +192,15 @@ else
 endif
 	@echo
 
-$(OUT)/obj/%.o: %.S
-ifeq ($(COMPILER), GCC_ARM)
-	@echo @$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
-	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
-else
-	@echo $(AS) $< -o $@ $(AS_FLAGS)
-	@$(AS) $< -o $@ $(AS_FLAGS)
-endif
-	@echo
+#$(OUT)/obj/%.o: %.S
+#ifeq ($(COMPILER), GCC_ARM)
+#	@echo @$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+#	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+#else
+#	@echo $(AS) $< -o $@ $(AS_FLAGS)
+#	@$(AS) $< -o $@ $(AS_FLAGS)
+#endif
+#	@echo
 
 clean:
 	rm -rf ./$(APP_NAME)/out
@@ -213,12 +214,7 @@ clean:
 #	@echo $(C_FILES)
 #	@echo "*** Object files (O_FILES):"
 #	@echo $(O_FILES)
-#
-#check_pdl:
-#	echo "Remove obsolete crypto driver files from PDL directory"
-#	@rm -rf $(PDL_PATH)/drivers/include/cy_crypto*.h
-#	@rm -rf $(PDL_PATH)/drivers/source/cy_crypto*.c
-#
+##
 #target_psoc6_ble2:
 #	#Build for PSOC6ble2 $(SI_REVISION)
 #	@`mkdir -p ./out`
@@ -289,6 +285,7 @@ clean:
 # 	rm -rf ./$(APP_NAME)/out
 
 # DEBUG PRINT
+$(info ASM_FILES: $(ASM_FILES))
 ifeq ($(MAKEINFO) , 1)
 $(info ASM_FILES: $(ASM_FILES))
 $(info C_FILES: $(C_FILES))

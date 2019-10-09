@@ -32,7 +32,7 @@ CUR_LIBS_PATH = $(CURDIR)/libs
 
 # Collect source files for PDL
 SOURCES_PDL := $(wildcard $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/source/*.c)
-SOURCES_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/devices/bsp/COMPONENT_MTB/startup/system_psoc6_cm0plus.c
+#SOURCES_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/devices/bsp/COMPONENT_MTB/startup/system_psoc6_cm0plus.c
 
 # Collect source files for MbedTLS
 #SOURCES_MBEDTLS := $(wildcard $(CUR_LIBS_PATH)/mbedtls/library/*.c)
@@ -57,6 +57,16 @@ SOURCES_LIBS += $(SOURCES_BSP)
 INCLUDE_DIRS_LIBS := $(addprefix -I,$(INCLUDE_DIRS_PDL))
 INCLUDE_DIRS_LIBS += $(addprefix -I,$(INCLUDE_DIRS_BSP))
 #INCLUDE_DIRS_LIBS += $(addprefix -I,$(INCLUDE_DIRS_MBEDTLS))
+
+ASM_FILES_PDL := 
+ifeq ($(COMPILER), GCC_ARM)
+ASM_FILES_PDL += $(CUR_LIBS_PATH)/pdl/psoc6pdl/drivers/source/TOOLCHAIN_GCC_ARM/cy_syslib_gcc.S
+else
+$(error Only GCC ARM is supported at this moment)
+endif
+
+ASM_FILES_LIBS := $(ASM_FILES_PDL)
+ASM_FILES_LIBS += $(ASM_FILES_BSP)
 
 # Add define for PDL version
 DEFINES_PDL += -DPDL_VERSION=$(PDL_VERSION)
