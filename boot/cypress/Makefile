@@ -112,7 +112,6 @@ OUT := ./$(APP_NAME)/out
 #ASM_FILES += $(ASM_FILES_PDL)
 #C_FILES := $(SOURCES_CRYPTOLIB) $(SOURCES_MBED_CRYPTO) $(SOURCES_JWT) $(SOURCES_BSP) $(SOURCES_PDL) $(SOURCES_FB)
 #C_FILES += $(wildcard hal/*.c)
-O_FILES := $(notdir $(C_FILES:.c=.o)) $(addsuffix .o, $(notdir $(basename $(ASM_FILES))))
 
 VPATH = $(dir $(C_FILES) $(ASM_FILES))
 
@@ -182,7 +181,7 @@ $(OUT)/obj/%.o: %.c
 	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
 	@echo
 
-$(OUT)/obj/%.o: %.s
+$(OUT)/obj/%.o: %.S
 ifeq ($(COMPILER), GCC_ARM)
 	@echo @$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
@@ -285,7 +284,6 @@ clean:
 # 	rm -rf ./$(APP_NAME)/out
 
 # DEBUG PRINT
-$(info ASM_FILES: $(ASM_FILES))
 ifeq ($(MAKEINFO) , 1)
 $(info ASM_FILES: $(ASM_FILES))
 $(info C_FILES: $(C_FILES))
