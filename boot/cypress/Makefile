@@ -154,13 +154,15 @@ VPATH = $(dir $(C_FILES) $(ASM_FILES))
 #endif
 #
 #
-.PHONY: app clean
+.PHONY: all app clean
+
+all: clean app
 
 app:
 	@`mkdir -p ./$(OUT)`
 	@`mkdir -p ./$(OUT)/obj`
 	@`mkdir -p ./$(OUT)/obj/$@`
-	$(MAKE) build TARGET=$(TARGET) APP=$(APP_NAME) -j8
+	$(MAKE) build -j8
 
 build: $(OUT)/$(APP_NAME).hex
 	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/$(APP_NAME).elf
@@ -168,20 +170,20 @@ build: $(OUT)/$(APP_NAME).hex
 $(OUT)/$(APP_NAME).hex: $(OUT)/$(APP_NAME).elf
 	$(GCC_PATH)/bin/arm-none-eabi-objcopy $(OUT)/$(APP_NAME).elf -O ihex $(OUT)/$(APP_NAME).hex
 
-$(OUT)/$(APP_NAME).elf: $(addprefix $(OUT)/obj/$(APP_NAME)/, $(O_FILES))
-	echo "We are here "
+$(OUT)/$(APP_NAME).elf: $(addprefix $(OUT)/obj/, $(O_FILES))
+	@echo "We are here "
 	@# the first  line prints a command
 	@# the second line executes the command and prints the command's stdout and stderr with colors
 	@echo $(LD) $(O_FILES) -o $@ $(LDFLAGS)
-	@$(LD) $(addprefix $(OUT)/obj/$(APP_NAME)/, $(O_FILES)) -o $@ $(LDFLAGS)
+	@$(LD) $(addprefix $(OUT)/obj/, $(O_FILES)) -o $@ $(LDFLAGS)
 
 
-$(OUT)/obj/$(APP_NAME)/%.o: %.c
+$(OUT)/obj/%.o: %.c
 	@echo $(CC) $(CFLAGS) $(INCLUDE_DIRS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
 	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) $(CC_DEPEND) $(@:.o=.d) -c $< -o $@
 	@echo
 
-$(OUT)/obj/$(APP_NAME)/%.o: %.s
+$(OUT)/obj/%.o: %.s
 ifeq ($(COMPILER), GCC_ARM)
 	@echo @$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
@@ -191,7 +193,7 @@ else
 endif
 	@echo
 
-$(OUT)/obj/$(APP_NAME)/%.o: %.S
+$(OUT)/obj/%.o: %.S
 ifeq ($(COMPILER), GCC_ARM)
 	@echo @$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 	@$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
