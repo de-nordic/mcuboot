@@ -26,4 +26,9 @@ Board/device target "CY8CPROTO-062-4343W-M0" (CM0p core)
 
 Build config - optimized for "Debug"
 
-__make TARGET=CY8CPROTO-062-4343W-M0 APP=MCUBootApp BUILDCFG=Debug__
+__make app APP_NAME=MCUBootApp TARGET=CY8CPROTO-062-4343W-M0 BUILDCFG=Debug__
+
+Defaults are following:
+APP_NAME=MCUBootApp
+TARGET=CY8CPROTO-062-4343W-M0
+BUILDCFG=Debug
