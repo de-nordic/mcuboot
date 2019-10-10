@@ -36,6 +36,12 @@ APPS := MCUBootApp
 OUT := $(APP_NAME)/out
 OUT_TARGET := $(OUT)/$(TARGET)
 
+ifneq ($(filter $(APP_NAME), $(APPS)),)
+include ./$(APP_NAME)/$(APP_NAME).mk
+else
+$(error Not supported application: '$(APP_NAME)')
+endif
+
 ASM_FILES := $(ASM_FILES_APP)
 ASM_FILES += $(ASM_FILES_LIBS)
 
@@ -67,12 +73,6 @@ DEFINES +=
 
 # updating CFLAGS at this point as DEFINES are completed
 CFLAGS += $(DEFINES)
-
-ifneq ($(filter $(APP_NAME), $(APPS)),)
-include ./$(APP_NAME)/$(APP_NAME).mk
-else
-$(error Not supported application: '$(APP_NAME)')
-endif
 
 #DEFINES := -D$(CHIP_ID) -DCY_FB_OPT_$(SI_REVISION) -DNDEBUG -DCY_CORE_ID=0 $(DEFINES_CRYPTO) $(DEFINES_PDL) $(DEFINES_OTHER) -DCY_FB_BUILD_NUMBER=$(CY_BUILD_NUMBER)UL $(PSVP_DEFINES) $(DEFINES_JWT)
 
