@@ -77,8 +77,7 @@ ifneq ($(DEFINES),)
 endif
 
 ifeq ($(COMPILER), GCC_ARM)
-#LINKER_SCRIPT := $(wildcard $(BSP_PATH)/linker/TOOLCHAIN_GCC_ARM/*_cm0plus.ld)
-LINKER_SCRIPT := /c/MCUboot/cy_mcuboot/boot/cypress/libs/bsp/TARGET_CY8CPROTO-062-4343W-M0/linker/TOOLCHAIN_GCC_ARM/cy8c6xxa_cm0plus.ld
+LINKER_SCRIPT := $(BSP_PATH)/linker/TOOLCHAIN_GCC_ARM/*_cm0plus.ld
 else
 $(error Only GCC ARM is supported at this moment)
 endif

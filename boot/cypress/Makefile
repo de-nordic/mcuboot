@@ -75,7 +75,6 @@ CFLAGS += $(DEFINES)
 
 ## helper suffix for versioning support
 #SUFFIX := $(SUFFIX_FAMILY)_$(SUFFIX_VERSION)
-OUT := ./$(APP_NAME)/out
 #
 #ifeq ($(CY_BUILD_NUMBER), )
 #	# may be useful when building from a command line on a local machine
@@ -152,6 +151,9 @@ VPATH = $(dir $(C_FILES) $(ASM_FILES))
 #endif
 #
 #
+OUT := $(APP_NAME)/out
+OUT_TARGET := $(OUT)/$(TARGET)
+
 .PHONY: all app build clean
 
 all: clean app
@@ -159,16 +161,16 @@ all: clean app
 app:
 	@`mkdir -p ./$(OUT)`
 	@`mkdir -p ./$(OUT)/obj`
-	@`mkdir -p ./$(OUT)/obj/$@`
+	@`mkdir -p ./$(OUT_TARGET)`
 	$(MAKE) build -j8
 
-build: $(OUT)/$(APP_NAME).hex
-	$(GCC_PATH)/bin/arm-none-eabi-size -B -d $(OUT)/$(APP_NAME).elf
+build: $(OUT_TARGET)/$(APP_NAME).hex
+	$(GCC_PATH)/bin/arm-none-eabi-size --format=berkeley $(OUT_TARGET)/$(APP_NAME).elf
 
-$(OUT)/$(APP_NAME).hex: $(OUT)/$(APP_NAME).elf
-	$(GCC_PATH)/bin/arm-none-eabi-objcopy $(OUT)/$(APP_NAME).elf -O ihex $(OUT)/$(APP_NAME).hex
+$(OUT_TARGET)/$(APP_NAME).hex: $(OUT_TARGET)/$(APP_NAME).elf
+	$(GCC_PATH)/bin/arm-none-eabi-objcopy $(OUT_TARGET)/$(APP_NAME).elf -O ihex $(OUT_TARGET)/$(APP_NAME).hex
 
-$(OUT)/$(APP_NAME).elf: $(addprefix $(OUT)/obj/, $(O_FILES))
+$(OUT_TARGET)/$(APP_NAME).elf: $(addprefix $(OUT)/obj/, $(O_FILES))
 	@echo "We are here "
 	@# the first  line prints a command
 	@# the second line executes the command and prints the command's stdout and stderr with colors
@@ -284,6 +286,9 @@ clean:
 # 	rm -rf ./$(APP_NAME)/out
 
 # DEBUG PRINT
+#$(info ******************)
+#$(info LDFLAGS: $(LDFLAGS))
+#$(info ******************)
 ifeq ($(MAKEINFO) , 1)
 $(info ASM_FILES: $(ASM_FILES))
 $(info C_FILES: $(C_FILES))
