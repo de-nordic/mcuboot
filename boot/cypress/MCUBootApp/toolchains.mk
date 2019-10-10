@@ -117,7 +117,7 @@ $(error BUILDCFG : '$(BUILDCFG)' is not supported)
 	endif
 	LDFLAGS_NANO := -L "$(GCC_PATH)/arm-none-eabi/lib/thumb/v6-m"
 	# TODO: check .map name
-	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_NANO) -T $(LINKER_SCRIPT) -Wl,-Map,$(OUT)/$(APP_NAME).map
+	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_NANO) -T $(LINKER_SCRIPT) -Wl,-Map,$(OUT_TARGET)/$(APP_NAME).map
 
 else ifeq ($(COMPILER), IAR)
 
@@ -134,5 +134,5 @@ else ifeq ($(COMPILER), IAR)
 	#options to extend stack analize: --log call_graph --log_file $(OUT)/stack_usage_$(SUFFIX).txt
 	LDFLAGS_STACK_USAGE := --stack_usage_control $(STACK_CONTROL_FILE) --diag_suppress=Ls015 --diag_suppress=Ls016
 	LDFLAGS_COMMON := --vfe --text_out locale --silent --inline --merge_duplicate_sections
-	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_STACK_USAGE) --config $(LINKER_SCRIPT) --map $(OUT)/$(APP_NAME).map --entry Cy_FB_ResetHandler --no_exceptions
+	LDFLAGS := $(LDFLAGS_COMMON) $(LDFLAGS_STACK_USAGE) --config $(LINKER_SCRIPT) --map $(OUT_TARGET)/$(APP_NAME).map --entry Cy_FB_ResetHandler --no_exceptions
 endif
