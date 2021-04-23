@@ -223,12 +223,12 @@ int
 boot_status_entries(int image_index, const struct flash_area *fap)
 {
 #if MCUBOOT_SWAP_USING_SCRATCH
-    if (flash_area_get_id(fap) == FLASH_AREA_IMAGE_SCRATCH) {
+    if (fap->fa_id == FLASH_AREA_IMAGE_SCRATCH) {
         return BOOT_STATUS_STATE_COUNT;
     } else
 #endif
-    if (flash_area_get_id(fap) == FLASH_AREA_IMAGE_PRIMARY(image_index) ||
-        flash_area_get_id(fap) == FLASH_AREA_IMAGE_SECONDARY(image_index)) {
+    if (fap->fa_id == FLASH_AREA_IMAGE_PRIMARY(image_index) ||
+               fap->fa_id == FLASH_AREA_IMAGE_SECONDARY(image_index)) {
         return BOOT_STATUS_STATE_COUNT * BOOT_STATUS_MAX_ENTRIES;
     }
     return -1;
@@ -244,14 +244,14 @@ boot_status_off(const struct flash_area *fap)
 
     off_from_end = boot_trailer_sz(elem_sz);
 
-    assert(off_from_end <= flash_area_get_size(fap));
-    return flash_area_get_size(fap) - off_from_end;
+    assert(off_from_end <= fap->fa_size);
+    return fap->fa_size - off_from_end;
 }
 
 static inline uint32_t
 boot_magic_off(const struct flash_area *fap)
 {
-    return flash_area_get_size(fap) - BOOT_MAGIC_SZ;
+    return fap->fa_size - BOOT_MAGIC_SZ;
 }
 
 static inline uint32_t
@@ -512,8 +512,8 @@ boot_write_magic(const struct flash_area *fap)
     off = boot_magic_off(fap);
 
     BOOT_LOG_DBG("writing magic; fa_id=%d off=0x%lx (0x%lx)",
-                 flash_area_get_id(fap), (unsigned long)off,
-                 (unsigned long)(flash_area_get_off(fap) + off));
+                 fap->fa_id, (unsigned long)off,
+                 (unsigned long)(fap->fa_off + off));
     rc = flash_area_write(fap, off, boot_img_magic, BOOT_MAGIC_SZ);
     if (rc != 0) {
         return BOOT_EFLASH;
@@ -570,8 +570,8 @@ boot_write_copy_done(const struct flash_area *fap)
 
     off = boot_copy_done_off(fap);
     BOOT_LOG_DBG("writing copy_done; fa_id=%d off=0x%lx (0x%lx)",
-                 flash_area_get_id(fap), (unsigned long)off,
-                 (unsigned long)(flash_area_get_off(fap) + off));
+                 fap->fa_id, (unsigned long)off,
+                 (unsigned long)(fap->fa_off + off));
     return boot_write_trailer_flag(fap, off, BOOT_FLAG_SET);
 }
 
@@ -582,8 +582,8 @@ boot_write_image_ok(const struct flash_area *fap)
 
     off = boot_image_ok_off(fap);
     BOOT_LOG_DBG("writing image_ok; fa_id=%d off=0x%lx (0x%lx)",
-                 flash_area_get_id(fap), (unsigned long)off,
-                 (unsigned long)(flash_area_get_off(fap) + off));
+                 fap->fa_id, (unsigned long)off,
+                 (unsigned long)(fap->fa_off + off));
     return boot_write_trailer_flag(fap, off, BOOT_FLAG_SET);
 }
 
@@ -603,8 +603,8 @@ boot_write_swap_info(const struct flash_area *fap, uint8_t swap_type,
     off = boot_swap_info_off(fap);
     BOOT_LOG_DBG("writing swap_info; fa_id=%d off=0x%lx (0x%lx), swap_type=0x%x"
                  " image_num=0x%x",
-                 flash_area_get_id(fap), (unsigned long)off,
-                 (unsigned long)(flash_area_get_off(fap) + off), swap_type, image_num);
+                 fap->fa_id, (unsigned long)off,
+                 (unsigned long)(fap->fa_off + off), swap_type, image_num);
     return boot_write_trailer(fap, off, (const uint8_t *) &swap_info, 1);
 }
 
@@ -615,8 +615,8 @@ boot_write_swap_size(const struct flash_area *fap, uint32_t swap_size)
 
     off = boot_swap_size_off(fap);
     BOOT_LOG_DBG("writing swap_size; fa_id=%d off=0x%lx (0x%lx)",
-                 flash_area_get_id(fap), (unsigned long)off,
-                 (unsigned long)flash_area_get_off(fap) + off);
+                 fap->fa_id, (unsigned long)off,
+                 (unsigned long)fap->fa_off + off);
     return boot_write_trailer(fap, off, (const uint8_t *) &swap_size, 4);
 }
 
@@ -630,8 +630,8 @@ boot_write_enc_key(const struct flash_area *fap, uint8_t slot,
 
     off = boot_enc_key_off(fap, slot);
     BOOT_LOG_DBG("writing enc_key; fa_id=%d off=0x%lx (0x%lx)",
-                 flash_area_get_id(fap), (unsigned long)off,
-                 (unsigned long)flash_area_get_off(fap) + off);
+                 fap->fa_id, (unsigned long)off,
+                 (unsigned long)fap->fa_off + off);
 #if MCUBOOT_SWAP_SAVE_ENCTLV
     rc = flash_area_write(fap, off, bs->enctlv[slot], BOOT_ENC_TLV_ALIGN_SIZE);
 #else
@@ -770,7 +770,7 @@ boot_set_pending(int permanent)
             return BOOT_EFLASH;
         }
 
-        flash_area_erase(fap, 0, flash_area_get_size(fap));
+        flash_area_erase(fap, 0, fap->fa_size);
         flash_area_close(fap);
         return BOOT_EBADIMAGE;
 

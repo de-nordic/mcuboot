@@ -298,11 +298,11 @@ bs_upload(char *buf, int len)
 
     if (off == 0) {
         curr_off = 0;
-        if (data_len > fap->fa_size) {
+        if (data_len > flash_area_get_size(fap)) {
             goto out_invalid_data;
         }
 #ifndef CONFIG_BOOT_ERASE_PROGRESSIVELY
-        rc = flash_area_erase(fap, 0, fap->fa_size);
+        rc = flash_area_erase(fap, 0, flash_area_get_size(fap));
         if (rc) {
             goto out_invalid_data;
         }
@@ -334,8 +334,9 @@ bs_upload(char *buf, int len)
     }
     if (off_last != sector.fs_off) {
         off_last = sector.fs_off;
-        BOOT_LOG_INF("Erasing sector at offset 0x%x", sector.fs_off);
-        rc = flash_area_erase(fap, sector.fs_off, sector.fs_size);
+        BOOT_LOG_INF("Erasing sector at offset 0x%x", flash_sector_get_off(&sector));
+        rc = flash_area_erase(fap, flash_sector_get_off(&sector),
+                              flash_sector_get_size(&sector));
         if (rc) {
             BOOT_LOG_ERR("Error %d while erasing sector", rc);
             goto out;
@@ -384,8 +385,10 @@ bs_upload(char *buf, int len)
             /* Assure that sector for image trailer was erased. */
             /* Check whether it was erased during previous upload. */
             if (off_last < sector.fs_off) {
-                BOOT_LOG_INF("Erasing sector at offset 0x%x", sector.fs_off);
-                rc = flash_area_erase(fap, sector.fs_off, sector.fs_size);
+                BOOT_LOG_INF("Erasing sector at offset 0x%x",
+                             flash_sector_get_off(&sector));
+                rc = flash_area_erase(fap, flash_sector_get_off(&sector),
+                                      flash_sector_get_size(&sector));
                 if (rc) {
                     BOOT_LOG_ERR("Error %d while erasing sector", rc);
                     goto out;
