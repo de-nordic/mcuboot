@@ -120,7 +120,7 @@ boot_go(struct boot_rsp *rsp)
     fih_rc = FIH_SUCCESS;
 #endif /* MCUBOOT_VALIDATE_PRIMARY_SLOT */
 
-    rsp->br_flash_dev_id = _fa_p->fa_device_id;
+    rsp->br_flash_dev_id = flash_area_get_device_id(_fa_p);
     rsp->br_image_off = _fa_p->fa_off;
     rsp->br_hdr = &_hdr;
 
