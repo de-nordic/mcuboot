@@ -88,7 +88,15 @@ static inline uint32_t flash_area_get_size(const struct flash_area *fa)
 
 static inline uint8_t flash_area_get_id(const struct flash_area *fa)
 {
-	return fa->fa_id;
+	extern const struct flash_area __flash_map_list_start[];
+#ifdef CONFIG_ASSERT
+	extern const struct flash_area __flash_map_list_end[];
+
+	__ASSERT_NO_MSG(fa >= __flash_map_list_start && fa < __flash_map_list_end &&
+			!((uintptr_t)__alignof(struct flash_area) & (const uintptr_t)fa));
+#endif
+
+	return fa - __flash_map_list_start;
 }
 
 uint8_t flash_area_get_device_id(const struct flash_area *fa);
