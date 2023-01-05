@@ -37,8 +37,16 @@
 #error "Image slot and flash area mapping is not defined"
 #endif
 
+struct flash_sector {
+    uint32_t fs_off;
+    uint32_t fs_size;
+};
+
 int flash_area_id_from_multi_image_slot(int image_index, int slot);
 int flash_area_id_to_multi_image_slot(int image_index, int area_id);
+
+int flash_area_get_sectors(int idx, uint32_t *cnt,
+                           struct flash_sector *sectors);
 
 static inline uint8_t flash_area_get_id(const struct flash_area *fa)
 {
@@ -58,6 +66,16 @@ static inline uint32_t flash_area_get_off(const struct flash_area *fa)
 static inline uint32_t flash_area_get_size(const struct flash_area *fa)
 {
     return fa->fa_size;
+}
+
+static inline uint32_t flash_sector_get_off(const struct flash_sector *fa)
+{
+    return fa->fs_off;
+}
+
+static inline uint32_t flash_sector_get_size(const struct flash_sector *fa)
+{
+    return fa->fs_size;
 }
 
 #endif /* __FLASH_MAP_BACKEND_H__ */

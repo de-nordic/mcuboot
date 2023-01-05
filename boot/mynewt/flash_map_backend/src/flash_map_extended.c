@@ -19,6 +19,10 @@
 
 #include <flash_map/flash_map.h>
 #include <flash_map_backend/flash_map_backend.h>
+#include "os/mynewt.h"
+#include "hal/hal_bsp.h"
+#include "hal/hal_flash.h"
+#include "hal/hal_flash_int.h"
 
 int flash_area_id_from_multi_image_slot(int image_index, int slot)
 {
@@ -41,4 +45,37 @@ int flash_area_id_to_multi_image_slot(int image_index, int area_id)
         return 1;
     }
     return 255;
+}
+
+int
+flash_area_get_sectors(int id, uint32_t *cnt, struct flash_sector *ret)
+{
+    const struct flash_area *fa;
+    const struct hal_flash *hf;
+    uint32_t start;
+    uint32_t size;
+    int rc;
+    int i;
+
+    rc = flash_area_open(id, &fa);
+    if (rc != 0) {
+        return rc;
+    }
+
+    *cnt = 0;
+
+    hf = hal_bsp_flash_dev(fa->fa_device_id);
+    for (i = 0; i < hf->hf_sector_cnt; i++) {
+        hf->hf_itf->hff_sector_info(hf, i, &start, &size);
+        if (start >= fa->fa_off && start < fa->fa_off + fa->fa_size) {
+            if (ret) {
+                ret->fs_off = start;
+                ret->fs_size = size;
+                ret++;
+            }
+            (*cnt)++;
+        }
+    }
+    flash_area_close(fa);
+    return 0;
 }
