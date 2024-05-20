@@ -46,6 +46,14 @@
 #define MCUBOOT_USE_NRF_EXTERNAL_CRYPTO
 #endif
 
+#ifdef CONFIG_BOOT_IMG_HASH_ALG_SHA512
+#define MCUBOOT_SHA512
+#endif
+
+#ifdef CONFIG_BOOT_IMG_HASH_ALG_SHA256
+#define MCUBOOT_SHA256
+#endif
+
 /* Zephyr, regardless of C library used, provides snprintf */
 #define MCUBOOT_USE_SNPRINTF 1
 
