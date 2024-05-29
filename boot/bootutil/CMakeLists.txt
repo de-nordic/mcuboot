@@ -10,6 +10,7 @@ add_library(bootutil STATIC)
 target_include_directories(bootutil
     PUBLIC
         include
+	${ZEPHYR_MBEDTLS_MODULE_DIR}/include
     PRIVATE
         src
 )

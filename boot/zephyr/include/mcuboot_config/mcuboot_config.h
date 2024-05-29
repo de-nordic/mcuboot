@@ -43,6 +43,8 @@
 #ifdef CONFIG_BOOT_USE_NRF_CC310_BL
 #define MCUBOOT_USE_NRF_CC310_BL
 #endif
+#elif defined(CONFIG_MBEDTLS_PSA_CRYPTO_CLIENT)
+#define MCUBOOT_USE_PSA_CRYPTO
 #endif
 
 /* Zephyr, regardless of C library used, provides snprintf */

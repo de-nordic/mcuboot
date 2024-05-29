@@ -49,6 +49,7 @@ endif()
 zephyr_library_include_directories(
   include
   targets
+  ${ZEPHYR_MBEDTLS_MODULE_DIR}/include
   )
 if(EXISTS targets/${BOARD}.h)
   zephyr_library_compile_definitions(MCUBOOT_TARGET_CONFIG="${BOARD}.h")
@@ -235,9 +236,16 @@ elseif(CONFIG_BOOT_SIGNATURE_TYPE_ED25519 OR CONFIG_BOOT_ENCRYPT_X25519)
     ${FIAT_DIR}/include/
   )
 
-  zephyr_library_sources(
-    ${FIAT_DIR}/src/curve25519.c
-  )
+  if(NOT CONFIG_BOOT_ED25519_PSA)
+    zephyr_library_sources(
+      ${FIAT_DIR}/src/curve25519.c
+    )
+  else()
+    zephyr_library_include_directories(${ZEPHYR_MBEDTLS_MODULE_DIR}/include)
+    zephyr_library_sources(
+      ${BOOT_DIR}/bootutil/src/ed25519_psa.c
+    )
+  endif()
 endif()
 
 if(CONFIG_BOOT_USE_TINYCRYPT AND (CONFIG_BOOT_ENCRYPT_EC256 OR CONFIG_BOOT_ENCRYPT_X25519))
