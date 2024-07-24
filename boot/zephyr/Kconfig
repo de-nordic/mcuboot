@@ -11,6 +11,19 @@ comment "MCUboot-specific configuration options"
 
 source "$(ZEPHYR_NRF_MODULE_DIR)/modules/mcuboot/boot/zephyr/Kconfig"
 
+# Within sdk-nrf NRF security is default
+config NRF_SECURITY
+	bool
+	default y
+	select NRF_OBERON
+	select BOOT_USE_PSA_CRYPTO
+
+# NRF_SECURITY enforces PSA crypt
+config MBEDTLS
+	bool
+	default n if NRF_SECURITY
+
+
 # Hidden option to mark a project as MCUboot
 config MCUBOOT
 	default y
@@ -26,6 +39,15 @@ config BOOT_USE_MBEDTLS
 	default n
 	help
 	  Use mbedTLS for crypto primitives.
+
+config BOOT_USE_PSA_CRYPTO
+	bool
+	# Hidden option
+	default n
+	# This is counter intuitive but that is how PSA heap is enabled.
+	select MBEDTLS_ENABLE_HEAP
+	help
+	  Use PSA Crypto API
 
 config BOOT_USE_TINYCRYPT
 	bool
@@ -60,6 +82,58 @@ config NRF_CC310_BL
 	bool
 	default n
 
+if BOOT_USE_PSA_CRYPTO
+config BOOT_PSA_IMG_HASH_ALG_SHA256_DEPENDENCIES
+	bool
+	default y if BOOT_IMG_HASH_ALG_SHA256
+	select PSA_WANT_ALG_SHA_256
+	help
+	  Dependencies for hashing with SHA256
+
+config BOOT_ED25519_PSA_DEPENDENCIES
+	bool
+	default n
+	select PSA_WANT_ALG_SHA_256
+	select PSA_WANT_ALG_SHA_512
+	select PSA_WANT_ALG_PURE_EDDSA
+	select PSA_WANT_ECC_TWISTED_EDWARDS_255
+	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT
+	help
+	  Dependencies for ed25519 signature
+
+if BOOT_ENCRYPT_IMAGE
+config BOOT_X25519_PSA_DEPENDENCIES
+	bool
+	default n
+	select PSA_WANT_ALG_ECDH
+	select PSA_WANT_ALG_HMAC
+	select PSA_WANT_ALG_HKDF
+	select PSA_WANT_ALG_CTR
+	select PSA_WANT_KEY_TYPE_ECC_KEY_PAIR_IMPORT
+	select PSA_WANT_KEY_TYPE_DERIVE
+	select PSA_WANT_KEY_TYPE_AES
+	select PSA_WANT_ECC_MONTGOMERY_255
+	help
+	  Dependencies for x25519 shared-random key encryption and AES
+	  encryption. The PSA_WANT_ALG_CTR and PSA_WANT_KEY_TYPE_AES
+	  enable Counter based block cipher and AES key, and algorithm support,
+	  to use with it; the others are used for shared key decryption
+	  and derivation.
+endif
+
+config MBEDTLS_HEAP_SIZE
+	int
+	default 2048
+	help
+	  The PSA internals need to be able to allocate memory for operation
+	  and it uses mbedTLS heap for that.
+
+config MBEDTLS_ENABLE_HEAP
+	bool
+	default y
+
+endif
+
 menu "MCUBoot settings"
 
 config SINGLE_APPLICATION_SLOT
@@ -70,13 +144,48 @@ config SINGLE_APPLICATION_SLOT
 	  uploading a new application overwrites the one that previously
 	  occupied the area.
 
+config BOOT_IMG_HASH_ALG_SHA256_ALLOW
+	bool
+	help
+	  Hidden option to set by configurations that allow SHA256
+
+config BOOT_IMG_HASH_ALG_SHA384_ALLOW
+	bool
+	help
+	  Hidden option to set by configurations that allow SHA384
+
+choice BOOT_IMG_HASH_ALG
+	prompt "Selected image hash algorithm"
+	help
+	  Hash algorithm used for image verification. Selection
+	  here may be limited by other configurations, like for
+	  example selected cryptographic signature.
+	default BOOT_IMG_HASH_ALG_SHA256 if BOOT_IMG_HASH_ALG_SHA256_ALLOW
+	default BOOT_IMG_HASH_ALG_SHA384 if BOOT_IMG_HASH_ALG_SHA384_ALLOW
+
+config BOOT_IMG_HASH_ALG_SHA256
+	bool "SHA256"
+	depends on BOOT_IMG_HASH_ALG_SHA256_ALLOW
+	help
+	  SHA256 algorithm
+
+config BOOT_IMG_HASH_ALG_SHA384
+	bool "SHA384"
+	depends on BOOT_IMG_HASH_ALG_SHA384_ALLOW
+	help
+	  SHA384 algorithm
+
+endchoice # BOOT_IMG_HASH_ALG
+
+
 choice BOOT_SIGNATURE_TYPE
 	prompt "Signature type"
 	default BOOT_SIGNATURE_TYPE_RSA
 
 config BOOT_SIGNATURE_TYPE_NONE
 	bool "No signature; use only hash check"
-	select BOOT_USE_TINYCRYPT
+	select BOOT_IMG_HASH_ALG_SHA256_ALLOW
+	select BOOT_USE_TINYCRYPT if !NRF_SECURITY
 
 config BOOT_SIGNATURE_TYPE_RSA
 	bool "RSA signatures"
@@ -117,18 +226,28 @@ endif
 config BOOT_SIGNATURE_TYPE_ED25519
 	bool "Edwards curve digital signatures using ed25519"
 	select BOOT_ENCRYPTION_SUPPORT
+	select BOOT_IMG_HASH_ALG_SHA256_ALLOW
 
 if BOOT_SIGNATURE_TYPE_ED25519
 choice BOOT_ED25519_IMPLEMENTATION
 	prompt "Ecdsa implementation"
+	default BOOT_ED25519_PSA if NRF_SECURITY
 	default BOOT_ED25519_TINYCRYPT
 config BOOT_ED25519_TINYCRYPT
 	bool "Use tinycrypt"
 	select BOOT_USE_TINYCRYPT
+	depends on !NRF_SECURITY
 config BOOT_ED25519_MBEDTLS
 	bool "Use mbedTLS"
 	select BOOT_USE_MBEDTLS
 	select MBEDTLS
+	depends on !NRF_SECURITY
+config BOOT_ED25519_PSA
+	bool "Use PSA crypto"
+	select BOOT_USE_PSA_CRYPTO
+	select BOOT_ED25519_PSA_DEPENDENCIES
+	select BOOT_X25519_PSA_DEPENDENCIES if BOOT_ENCRYPT_IMAGE
+
 endchoice
 endif
 
@@ -167,8 +286,12 @@ config MCUBOOT_CLEANUP_ARM_CORE
 	  start-up code which can cause a module fault and potentially make the
 	  module irrecoverable.
 
+if MBEDTLS
+
 config MBEDTLS_CFG_FILE
 	default "mcuboot-mbedtls-cfg.h"
+
+endif
 
 config BOOT_HW_KEY
 	bool "Use HW key for image verification"
