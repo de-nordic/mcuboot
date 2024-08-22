@@ -141,6 +141,8 @@ def get_digest(tlv_type, hash_region):
         sha = hashlib.sha384()
     elif tlv_type == TLV_VALUES["SHA256"]:
         sha = hashlib.sha256()
+    elif tlv_type == TLV_VALUES["SHA512"]:
+        sha = hashlib.sha512()
 
     sha.update(hash_region)
     return sha.digest()
