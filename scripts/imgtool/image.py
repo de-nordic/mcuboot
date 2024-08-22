@@ -40,6 +40,8 @@ from . import version as versmod, keys
 from .boot_record import create_sw_component_data
 from .keys import rsa, ecdsa, x25519
 
+from collections import namedtuple
+
 IMAGE_MAGIC = 0x96f3b83d
 IMAGE_HEADER_SIZE = 32
 BIN_EXT = "bin"
@@ -65,6 +67,7 @@ TLV_VALUES = {
         'PUBKEY': 0x02,
         'SHA256': 0x10,
         'SHA384': 0x11,
+        'SHA512': 0x12,
         'RSA2048': 0x20,
         'ECDSASIG': 0x22,
         'RSA3072': 0x23,
@@ -136,24 +139,89 @@ class TLV():
         return header + bytes(self.buf)
 
 
+SHAAndAlgT = namedtuple('SHAAndAlgT', ['sha', 'alg'])
+
+TLV_SHA_TO_SHA_AND_ALG = {
+    TLV_VALUES["SHA256"] : SHAAndAlgT('256', hashlib.sha256),
+    TLV_VALUES["SHA384"] : SHAAndAlgT('384', hashlib.sha384),
+    TLV_VALUES["SHA512"] : SHAAndAlgT('512', hashlib.sha512),
+}
+
+
+USER_SHA_TO_ALG_AND_TLV = {
+    'auto'   : (hashlib.sha256, 'SHA256'),
+    '256'    : (hashlib.sha256, 'SHA256'),
+    '384'    : (hashlib.sha384, 'SHA384'),
+    '512'    : (hashlib.sha512, 'SHA512')
+}
+
+
+def is_sha_tlv(tlv):
+    return tlv in TLV_SHA_TO_SHA_AND_ALG.keys()
+
+
 def get_digest(tlv_type, hash_region):
-    if tlv_type == TLV_VALUES["SHA384"]:
-        sha = hashlib.sha384()
-    elif tlv_type == TLV_VALUES["SHA256"]:
-        sha = hashlib.sha256()
-    elif tlv_type == TLV_VALUES["SHA512"]:
-        sha = hashlib.sha512()
+    print("###################")
+    print(tlv_type)
+    sha = TLV_SHA_TO_SHA_AND_ALG[tlv_type].alg()
+    print(sha)
 
     sha.update(hash_region)
     return sha.digest()
+
+
+def tlv_sha_to_sha(tlv):
+    return TLV_SHA_TO_SHA_AND_ALG[tlv].sha
 
 
 def tlv_matches_key_type(tlv_type, key):
     """Check if provided key matches to TLV record in the image"""
     return (key is None or
             type(key) == keys.ECDSA384P1 and tlv_type == TLV_VALUES["SHA384"] or
-            type(key) != keys.ECDSA384P1 and tlv_type == TLV_VALUES["SHA256"])
+            type(key) == keys.Ed25519 and tlv_type == TLV_VALUES["SHA256"] or
+            type(key) == keys.Ed25519 and tlv_type == TLV_VALUES["SHA512"])
 
+
+# Auto selecting hash algorithm for type(key)
+ALLOWED_KEY_SHA = {
+    keys.ECDSA384P1         : ['384'],
+    keys.ECDSA384P1Public   : ['384'],
+    keys.ECDSA256P1         : ['256'],
+    keys.RSA                : ['256'],
+    # This two are set to 256 for compatibility, the right would be 512
+    keys.Ed25519            : ['256', '512'],
+    keys.X25519             : ['256', '512']
+}
+
+def key_and_user_sha_to_alg_and_tlv(key, user_sha):
+    if key is None:
+        return USER_SHA_TO_ALG_AND_TLV[user_sha]
+
+    print(key)
+    print(user_sha)
+    print(ALLOWED_KEY_SHA)
+    print(type(key))
+    allowed = None
+    try:
+        allowed = ALLOWED_KEY_SHA[type(key)]
+    except KeyError:
+        raise click.UsageError("Colud not find allowed hash algorithms for {}"
+                               .format(type(key)))
+    if user_sha == 'auto':
+        return USER_SHA_TO_ALG_AND_TLV[allowed[0]]
+
+    if user_sha in allowed:
+        return USER_SHA_TO_ALG_AND_TLV[user_sha]
+
+    raise click.UsageError("Key {} can not be used with --sha {}; allowed sha are one of {}"
+                           .format(key.sig_type(), user_sha, allowed))
+
+def check_do_double_sha(key, sha):
+    print(type(key))
+    print(sha)
+    print(type(key) == keys.Ed25519)
+    print(sha in ['512', 'SHA512'])
+    return not (type(key) == keys.Ed25519 and (sha in ['512', 'SHA512']))
 
 class Image:
 
@@ -340,14 +408,12 @@ class Image:
                fixed_sig=None, pub_key=None, vector_to_sign=None, user_sha='auto'):
         self.enckey = enckey
 
-        # Check what hashing algorithm should be used
-        if (key and isinstance(key, ecdsa.ECDSA384P1)
-                or pub_key and isinstance(pub_key, ecdsa.ECDSA384P1Public)):
-            hash_algorithm = hashlib.sha384
-            hash_tlv = "SHA384"
-        else:
-            hash_algorithm = hashlib.sha256
-            hash_tlv = "SHA256"
+        print("user_sha " + user_sha)
+        # key decides on sha, then pub_key; of both are none default is used
+        check_key = key if key is not None else pub_key
+        hash_algorithm, hash_tlv = key_and_user_sha_to_alg_and_tlv(check_key, user_sha)
+        double_sha = check_do_double_sha(key, hash_tlv)
+
         # Calculate the hash of the public key
         if key is not None:
             pub = key.get_public_bytes()
@@ -372,6 +438,7 @@ class Image:
             protected_tlv_size += TLV_SIZE + 4
 
         if sw_type is not None:
+            print("Doing the bboot record?")
             if len(sw_type) > MAX_SW_TYPE_LENGTH:
                 msg = "'{}' is too long ({} characters) for sw_type. Its " \
                       "maximum allowed length is 12 characters.".format(
@@ -467,11 +534,23 @@ class Image:
 
         tlv = TLV(self.endian)
 
-        # Note that ecdsa wants to do the hashing itself, which means
-        # we get to hash it twice.
-        sha = hash_algorithm()
-        sha.update(self.payload)
-        digest = sha.digest()
+        # Proper use of ED25519 requires usage of SHA512; the default
+        # for imgtool, and MCUboot, is to calculate SHA256 and pass it
+        # to ED25519 where SHA512 of it is calculated and signed.
+        # That is not correct approach as it reduces domain of SHA512,
+        # and needlessly does double sha calculation.
+        # To remain compatible, when SHA256 is selected with ED25519
+        # it will do the double hashing, but when SHA512 is selected,
+        # the payload is directly passed for signature and only hashed
+        # once.
+        if double_sha:
+           print("Doing double")
+           sha = hash_algorithm()
+           sha.update(self.payload)
+           digest = sha.digest()
+        else:
+           print("Doing single")
+           digest = bytes(self.payload)
         tlv.add(hash_tlv, digest)
 
         if vector_to_sign == 'payload':
@@ -501,6 +580,7 @@ class Image:
                 else:
                     print(os.path.basename(__file__) + ": sign the digest")
                     sig = key.sign_digest(digest)
+                    print("Signature is " + str(sig))
                 tlv.add(key.sig_tlv(), sig)
                 self.signature = sig
             elif fixed_sig is not None and key is None:
@@ -677,11 +757,17 @@ class Image:
         while tlv_off < tlv_end:
             tlv = b[tlv_off:tlv_off + TLV_SIZE]
             tlv_type, _, tlv_len = struct.unpack('BBH', tlv)
-            if tlv_type == TLV_VALUES["SHA256"] or tlv_type == TLV_VALUES["SHA384"]:
+            print("Tlv type is " + str(tlv_type))
+            if is_sha_tlv(tlv_type):
+                print("Success")
+                print("tlv len is " + str(tlv_len))
                 if not tlv_matches_key_type(tlv_type, key):
                     return VerifyResult.KEY_MISMATCH, None, None
                 off = tlv_off + TLV_SIZE
-                digest = get_digest(tlv_type, hash_region)
+                if check_do_double_sha(key, tlv_sha_to_sha(tlv_type)):
+                    digest = get_digest(tlv_type, hash_region)
+                else:
+                    digest = get_digest(tlv_type, hash_region)
                 if digest == b[off:off + tlv_len]:
                     if key is None:
                         return VerifyResult.OK, version, digest
@@ -695,6 +781,7 @@ class Image:
                     if hasattr(key, 'verify'):
                         key.verify(tlv_sig, payload)
                     else:
+                        #print(tlv_sig)
                         key.verify_digest(tlv_sig, digest)
                     return VerifyResult.OK, version, digest
                 except InvalidSignature:
