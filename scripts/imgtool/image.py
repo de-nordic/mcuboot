@@ -337,7 +337,7 @@ class Image:
 
     def create(self, key, public_key_format, enckey, dependencies=None,
                sw_type=None, custom_tlvs=None, encrypt_keylen=128, clear=False,
-               fixed_sig=None, pub_key=None, vector_to_sign=None):
+               fixed_sig=None, pub_key=None, vector_to_sign=None, user_sha='auto'):
         self.enckey = enckey
 
         # Check what hashing algorithm should be used
