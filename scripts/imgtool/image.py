@@ -142,9 +142,9 @@ class TLV():
 SHAAndAlgT = namedtuple('SHAAndAlgT', ['sha', 'alg'])
 
 TLV_SHA_TO_SHA_AND_ALG = {
-    TLV_VALUES["SHA256"] : SHAAndAlgT('256', hashlib.sha256),
-    TLV_VALUES["SHA384"] : SHAAndAlgT('384', hashlib.sha384),
-    TLV_VALUES["SHA512"] : SHAAndAlgT('512', hashlib.sha512),
+    TLV_VALUES['SHA256'] : SHAAndAlgT('256', hashlib.sha256),
+    TLV_VALUES['SHA384'] : SHAAndAlgT('384', hashlib.sha384),
+    TLV_VALUES['SHA512'] : SHAAndAlgT('512', hashlib.sha512),
 }
 
 
@@ -161,10 +161,7 @@ def is_sha_tlv(tlv):
 
 
 def get_digest(tlv_type, hash_region):
-    print("###################")
-    print(tlv_type)
     sha = TLV_SHA_TO_SHA_AND_ALG[tlv_type].alg()
-    print(sha)
 
     sha.update(hash_region)
     return sha.digest()
@@ -197,10 +194,6 @@ def key_and_user_sha_to_alg_and_tlv(key, user_sha):
     if key is None:
         return USER_SHA_TO_ALG_AND_TLV[user_sha]
 
-    print(key)
-    print(user_sha)
-    print(ALLOWED_KEY_SHA)
-    print(type(key))
     allowed = None
     try:
         allowed = ALLOWED_KEY_SHA[type(key)]
@@ -216,11 +209,7 @@ def key_and_user_sha_to_alg_and_tlv(key, user_sha):
     raise click.UsageError("Key {} can not be used with --sha {}; allowed sha are one of {}"
                            .format(key.sig_type(), user_sha, allowed))
 
-def check_do_double_sha(key, sha):
-    print(type(key))
-    print(sha)
-    print(type(key) == keys.Ed25519)
-    print(sha in ['512', 'SHA512'])
+def do_double_sha(key, sha):
     return not (type(key) == keys.Ed25519 and (sha in ['512', 'SHA512']))
 
 class Image:
@@ -408,11 +397,10 @@ class Image:
                fixed_sig=None, pub_key=None, vector_to_sign=None, user_sha='auto'):
         self.enckey = enckey
 
-        print("user_sha " + user_sha)
         # key decides on sha, then pub_key; of both are none default is used
         check_key = key if key is not None else pub_key
         hash_algorithm, hash_tlv = key_and_user_sha_to_alg_and_tlv(check_key, user_sha)
-        double_sha = check_do_double_sha(key, hash_tlv)
+        double_sha = do_double_sha(key, hash_tlv)
 
         # Calculate the hash of the public key
         if key is not None:
@@ -438,7 +426,6 @@ class Image:
             protected_tlv_size += TLV_SIZE + 4
 
         if sw_type is not None:
-            print("Doing the bboot record?")
             if len(sw_type) > MAX_SW_TYPE_LENGTH:
                 msg = "'{}' is too long ({} characters) for sw_type. Its " \
                       "maximum allowed length is 12 characters.".format(
@@ -543,14 +530,13 @@ class Image:
         # it will do the double hashing, but when SHA512 is selected,
         # the payload is directly passed for signature and only hashed
         # once.
+        sha = hash_algorithm()
+        sha.update(self.payload)
+        digest = sha.digest()
         if double_sha:
-           print("Doing double")
-           sha = hash_algorithm()
-           sha.update(self.payload)
-           digest = sha.digest()
+           message = digest;
         else:
-           print("Doing single")
-           digest = bytes(self.payload)
+           message = bytes(self.payload)
         tlv.add(hash_tlv, digest)
 
         if vector_to_sign == 'payload':
@@ -579,8 +565,7 @@ class Image:
                     sig = key.sign(bytes(self.payload))
                 else:
                     print(os.path.basename(__file__) + ": sign the digest")
-                    sig = key.sign_digest(digest)
-                    print("Signature is " + str(sig))
+                    sig = key.sign_digest(message)
                 tlv.add(key.sig_tlv(), sig)
                 self.signature = sig
             elif fixed_sig is not None and key is None:
@@ -752,22 +737,18 @@ class Image:
         prot_tlv_size = tlv_off
         hash_region = b[:prot_tlv_size]
         digest = None
+        digest_sha = '256'
         tlv_end = tlv_off + tlv_tot
         tlv_off += TLV_INFO_SIZE  # skip tlv info
         while tlv_off < tlv_end:
             tlv = b[tlv_off:tlv_off + TLV_SIZE]
             tlv_type, _, tlv_len = struct.unpack('BBH', tlv)
-            print("Tlv type is " + str(tlv_type))
             if is_sha_tlv(tlv_type):
-                print("Success")
-                print("tlv len is " + str(tlv_len))
                 if not tlv_matches_key_type(tlv_type, key):
                     return VerifyResult.KEY_MISMATCH, None, None
+                digest_sha = tlv_sha_to_sha(tlv_type)
                 off = tlv_off + TLV_SIZE
-                if check_do_double_sha(key, tlv_sha_to_sha(tlv_type)):
-                    digest = get_digest(tlv_type, hash_region)
-                else:
-                    digest = get_digest(tlv_type, hash_region)
+                digest = get_digest(tlv_type, hash_region)
                 if digest == b[off:off + tlv_len]:
                     if key is None:
                         return VerifyResult.OK, version, digest
@@ -781,8 +762,10 @@ class Image:
                     if hasattr(key, 'verify'):
                         key.verify(tlv_sig, payload)
                     else:
-                        #print(tlv_sig)
-                        key.verify_digest(tlv_sig, digest)
+                        if do_double_sha(key, digest_sha):
+                            key.verify_digest(tlv_sig, digest)
+                        else:
+                            key.verify_digest(tlv_sig, hash_region)
                     return VerifyResult.OK, version, digest
                 except InvalidSignature:
                     # continue to next TLV
