@@ -160,23 +160,8 @@ def is_sha_tlv(tlv):
     return tlv in TLV_SHA_TO_SHA_AND_ALG.keys()
 
 
-def get_digest(tlv_type, hash_region):
-    sha = TLV_SHA_TO_SHA_AND_ALG[tlv_type].alg()
-
-    sha.update(hash_region)
-    return sha.digest()
-
-
 def tlv_sha_to_sha(tlv):
     return TLV_SHA_TO_SHA_AND_ALG[tlv].sha
-
-
-def tlv_matches_key_type(tlv_type, key):
-    """Check if provided key matches to TLV record in the image"""
-    return (key is None or
-            type(key) == keys.ECDSA384P1 and tlv_type == TLV_VALUES["SHA384"] or
-            type(key) == keys.Ed25519 and tlv_type == TLV_VALUES["SHA256"] or
-            type(key) == keys.Ed25519 and tlv_type == TLV_VALUES["SHA512"])
 
 
 # Auto selecting hash algorithm for type(key)
@@ -191,9 +176,16 @@ ALLOWED_KEY_SHA = {
 }
 
 def key_and_user_sha_to_alg_and_tlv(key, user_sha):
+    """Matches key and user requested sha to sha alogrithm and TLV name.
+       The returned tuple will contain hash functions and TVL name.
+       The function is designed to succeed or completely fail execution,
+       as providing incorrect pair here basically prevents doing
+       any more work."""
     if key is None:
+        # If key is none, we allow whatever user has selected for sha
         return USER_SHA_TO_ALG_AND_TLV[user_sha]
 
+    # If key is not None, then we have to filter hash to only allowed
     allowed = None
     try:
         allowed = ALLOWED_KEY_SHA[type(key)]
@@ -209,8 +201,31 @@ def key_and_user_sha_to_alg_and_tlv(key, user_sha):
     raise click.UsageError("Key {} can not be used with --sha {}; allowed sha are one of {}"
                            .format(key.sig_type(), user_sha, allowed))
 
+
 def do_double_sha(key, sha):
     return not (type(key) == keys.Ed25519 and (sha in ['512', 'SHA512']))
+
+
+def get_digest(tlv_type, hash_region):
+    sha = TLV_SHA_TO_SHA_AND_ALG[tlv_type].alg()
+
+    sha.update(hash_region)
+    return sha.digest()
+
+
+def tlv_matches_key_type(tlv_type, key):
+    """Check if provided key matches to TLV record in the image"""
+    try:
+        # We do not need the result here, and the key_and_user_sha_to_alg_and_tlv
+        # will either succeed finding match or rise exception, so on success we
+        # return True, on exception we return False.
+        _, _ = key_and_user_sha_to_alg_and_tlv(key, tlv_sha_to_sha(tlv_type))
+        return True
+    except:
+        pass
+
+    return False
+
 
 class Image:
 
@@ -737,6 +752,7 @@ class Image:
         prot_tlv_size = tlv_off
         hash_region = b[:prot_tlv_size]
         digest = None
+        # Safe bet on sha256, the right one will be identified from TLV
         digest_sha = '256'
         tlv_end = tlv_off + tlv_tot
         tlv_off += TLV_INFO_SIZE  # skip tlv info
