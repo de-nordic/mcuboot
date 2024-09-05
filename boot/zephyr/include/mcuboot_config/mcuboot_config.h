@@ -136,6 +136,16 @@
 #define MCUBOOT_ENCRYPT_X25519
 #endif
 
+/* Invoke hashing functions directly on storage. This requires for device
+ * to be able to map storage to address space or RAM.
+ */
+#ifdef CONFIG_BOOT_IMG_HASH_DIRECTLY_ON_STORAGE
+#ifdef MCUBOOT_ENC_IMAGES
+#error "Direct hash check is currently not supported when encrypted images are enabled"
+#endif
+#define MCUBOOT_HASH_STORAGE_DIRECTLY
+#endif
+
 #ifdef CONFIG_BOOT_BOOTSTRAP
 #define MCUBOOT_BOOTSTRAP 1
 #endif
