@@ -92,20 +92,39 @@ libraries. The whole key encryption can be summarized as:
   keypair. Those keys will be our ephemeral keys.
 * Generate a new secret (DH) using the ephemeral private key and the public key
   that corresponds to the private key embedded in the HW.
-* Derive the new keys from the secret using HKDF (built on HMAC-SHA256). We
-  are not using a `salt` and using an `info` of `MCUBoot_ECIES_v1`, generating
-  48 bytes of key material.
+* Derive the new keys from the secret using HKDF. We are not using a `salt`
+  and using an `info` of `MCUBoot_ECIES_v1`, generating 48 bytes of key material.
 * A new random encryption key is generated (for AES). This is
   the AES key used to encrypt the images.
 * The key is encrypted with AES-128-CTR or AES-256-CTR and a `nonce` of 0 using
   the first 16 bytes of key material generated previously by the HKDF.
-* The encrypted key now goes through a HMAC-SHA256 using the remaining 32
+* The encrypted key now goes through a HMAC using the remaining 32
   bytes of key material from the HKDF.
 
-The final TLV is built from the 65 bytes for ECIES-P256 or 32 bytes for
-ECIES-X25519, which correspond to the ephemeral public key, followed by the
-32 bytes of MAC tag and the 16 or 32 bytes of the encrypted key, resulting in
-a TLV of 113 or 129 bytes for ECIES-P256 and 80 or 96 bytes for ECIES-X25519.
+Normally HMAC-SHA256 is used for HMAC and HKDF, this can be altered for
+ECIES-X25519, so that HMAC-SHA512 is used; this allows to compile in only
+single SHA algorithm, when ECIES-X25519 is configured with SHA512 instead
+of SHA256, reducing size of MCUboot binary.
+
+There are different TLVs used for ECIES-X25519 with HMAC-SHA256 and HMAC-SHA512,
+and when HMAC-SHA512 is used the TLV may vary in size, depending whether MAC
+tag has been truncated.
+
+The final TLV for ECIES-P256 consists of is 65 bytes of the an ephemeral public key,
+followed by the 32 bytes of MAC tag and the 16 or 32 bytes of the encrypted AES key,
+resulting in a TLV of 113 or 129 bytes.
+
+The final TLV for ECIES-X25519 based on HMAC-SHA256 consists of 32 bytes of an
+ephemeral public key, followed by the 32 bytes of MAC tag and the 16 or 32 bytes
+of the encrypted AES key, resulting in a TLV of 80 or 96 bytes.
+
+The final TLV for ECIES-X25519 based on HMAC-SHA512 consists of 32 bytes of an
+ephemeral public key, followed by the 32 to 64 bytes of MAC tag and the 16 or 32 bytes
+of the encrypted AES key, resulting in TLV that is 80 to 128 bytes.
+
+The ECIES-P256, ECIES-X25519 on HMAC-SHA256 and ECIES-X25519 on HMAC-SHA512 all have
+different TLV identifiers.
+
 
 The implemenation of ECIES-P256 is named ENC_EC256 in the source code and
 artifacts while ECIES-X25519 is named ENC_X25519.
