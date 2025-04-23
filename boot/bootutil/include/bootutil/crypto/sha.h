@@ -46,8 +46,9 @@
 #endif /* MCUBOOT_SIGN */
 
 /* Universal defines for SHA-256 */
-#define BOOTUTIL_CRYPTO_SHA256_BLOCK_SIZE  (64)
 #define BOOTUTIL_CRYPTO_SHA256_DIGEST_SIZE (32)
+/* Universal defines for SHA-512 */
+#define BOOTUTIL_CRYPTO_SHA512_DIGEST_SIZE (64)
 
 #if defined(MCUBOOT_USE_PSA_CRYPTO)
 
