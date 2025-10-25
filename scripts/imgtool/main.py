@@ -483,11 +483,11 @@ def sign(ctx, key, public_key_format, align, version, pad_sig, header_size,
     if not aes_raw_key:
         enckey = load_key(encrypt) if encrypt else None
         if enckey and key and ((isinstance(key, keys.ECDSA256P1) and
-          not isinstance(enckey, keys.ECDSA256P1Public))
-        or (isinstance(key, keys.ECDSA384P1) and
-            not isinstance(enckey, keys.ECDSA384P1Public))
-             or (isinstance(key, keys.RSA) and
-                 not isinstance(enckey, keys.RSAPublic))):
+                                not isinstance(enckey, keys.ECDSA256P1Public))
+                               or (isinstance(key, keys.ECDSA384P1) and
+                                   not isinstance(enckey, keys.ECDSA384P1Public))
+                               or (isinstance(key, keys.RSA) and
+                                   not isinstance(enckey, keys.RSAPublic))):
             # FIXME
             raise click.UsageError("Signing and encryption must use the same "
                                     "type of key")
