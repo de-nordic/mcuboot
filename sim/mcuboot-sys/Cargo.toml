@@ -95,6 +95,7 @@ max-align-32 = []
 
 # Use logical sectors
 logical-sectors-4k = []
+logical-sectors-16k = []
 
 # Enable hardware rollback protection
 hw-rollback-protection = []

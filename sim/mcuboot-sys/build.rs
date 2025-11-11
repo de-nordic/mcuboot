@@ -41,6 +41,7 @@ fn main() {
     let hw_rollback_protection = env::var("CARGO_FEATURE_HW_ROLLBACK_PROTECTION").is_ok();
     let check_load_addr = env::var("CARGO_FEATURE_CHECK_LOAD_ADDR").is_ok();
     let logical_sectors_4k = env::var("CARGO_FEATURE_LOGICAL_SECTORS_4K").is_ok();
+    let logical_sectors_16k = env::var("CARGO_FEATURE_LOGICAL_SECTORS_16K").is_ok();
 
     let mut conf = CachedBuild::new();
     conf.conf.define("__BOOTSIM__", None);
@@ -57,6 +58,10 @@ fn main() {
 
     if logical_sectors_4k {
         conf.conf.define("MCUBOOT_LOGICAL_SECTOR_SIZE", Some("4096"));
+    }
+
+    if logical_sectors_16k {
+        conf.conf.define("MCUBOOT_LOGICAL_SECTOR_SIZE", Some("16384"));
     }
 
     conf.conf.define("MCUBOOT_IMAGE_NUMBER", Some(if multiimage { "2" } else { "1" }));
