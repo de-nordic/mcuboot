@@ -46,13 +46,13 @@ BOOT_LOG_MODULE_DECLARE(mcuboot);
 #define MCUBOOT_SWAP_USING_SCRATCH 1
 #endif
 
-static inline int flash_area_get_sector_off(const struct flash_area *fa, size_t in_off, size_t *out_off)
+static inline int flash_area_get_sector_off(const struct flash_area *fa, uint32_t in_off, uint32_t *out_off)
 {
-#if MCUBOOT_LOGICAL_SECOTOR_SIZE == 0
-    int ret = 0;
+#if MCUBOOT_LOGICAL_SECTOR_SIZE == 0
+    int ret;
     struct flash_sector sector;
 
-    ret = flash_area_get_sector(fa, 0, &sector);
+    ret = flash_area_get_sector(fa, in_off, &sector);
     if (ret < 0) {
         return ret;
     }
@@ -60,31 +60,33 @@ static inline int flash_area_get_sector_off(const struct flash_area *fa, size_t 
     *out_off = flash_sector_get_off(&sector);
 #else
     if (in_off >= flash_area_get_size(fa)) {
-        return -ERANGE;
+        return -1;
     }
-    out_off = (in_off / MCUBOOT_LOGICAL_SECOTOR_SIZE) * MCUBOOT_LOGICAL_SECOTOR_SIZE;
+    *out_off = (in_off / MCUBOOT_LOGICAL_SECTOR_SIZE) * MCUBOOT_LOGICAL_SECTOR_SIZE;
 #endif
 
     return 0;
 }
 
-static inline int flash_area_get_sector_size(const struct flash_area *fa, size_t in_off, size_t *out_size)
+static inline int flash_area_get_sector_size(const struct flash_area *fa, uint32_t in_off, uint32_t *out_size)
 {
-#if MCUBOOT_LOGICAL_SECOTOR_SIZE == 0
-    int ret = 0;
+#if MCUBOOT_LOGICAL_SECTOR_SIZE == 0
+    int ret;
     struct flash_sector sector;
 
-    ret = flash_area_get_sector(fa, 0, &sector);
+    ret = flash_area_get_sector(fa, in_off, &sector);
     if (ret < 0) {
         return ret;
     }
 
     *out_size = flash_sector_get_size(&sector);
 #else
+    (void)in_off;
+
     if (in_off >= flash_area_get_size(fa)) {
-        return -ERANGE;
+        return -1;
     }
-    out_size = MCUBOOT_LOGICAL_SECOTOR_SIZE;
+    *out_size = MCUBOOT_LOGICAL_SECTOR_SIZE;
 #endif
 
     return 0;
@@ -166,12 +168,11 @@ uint32_t boot_scratch_trailer_sz(uint32_t min_write_sz)
  * @return 0 on success; nonzero on failure.
  */
 static int
-boot_header_scramble_off_sz(const struct flash_area *fa, int slot, size_t *off, size_t *size)
+boot_header_scramble_off_sz(const struct flash_area *fa, int slot, uint32_t *off, size_t *size)
 {
     int ret = 0;
     const size_t write_block = flash_area_align(fa);
-    size_t loff = 0;
-    struct flash_sector sector;
+    uint32_t loff = 0;
 
     BOOT_LOG_DBG("boot_header_scramble_off_sz: slot %d", slot);
 
@@ -210,6 +211,7 @@ int
 boot_trailer_scramble_offset(const struct flash_area *fa, size_t alignment, size_t *off)
 {
     int ret = 0;
+    uint32_t loff;
 
     BOOT_LOG_DBG("boot_trailer_scramble_offset: flash_area %p, alignment %u",
                  fa, (unsigned int)alignment);
@@ -221,13 +223,12 @@ boot_trailer_scramble_offset(const struct flash_area *fa, size_t alignment, size
 
     if (device_requires_erase(fa)) {
         /* For device requiring erase align to erase unit */
-        struct flash_sector sector;
-
         ret = flash_area_get_sector_off(fa, flash_area_get_size(fa) - boot_trailer_sz(alignment),
-                                    &off);
+                                    &loff);
         if (ret < 0) {
             return ret;
         }
+        *off = (size_t)loff;
     } else {
         /* For device not requiring erase align to write block */
         *off = flash_area_get_size(fa) - ALIGN_DOWN(boot_trailer_sz(alignment), alignment);
@@ -252,7 +253,6 @@ boot_erase_region(const struct flash_area *fa, uint32_t off, uint32_t size, bool
         goto end;
     } else if (device_requires_erase(fa)) {
         uint32_t end_offset = 0;
-        struct flash_sector sector;
 
         BOOT_LOG_DBG("boot_erase_region: device with erase");
 
@@ -261,6 +261,7 @@ boot_erase_region(const struct flash_area *fa, uint32_t off, uint32_t size, bool
             rc = flash_area_get_sector_off(fa, off, &end_offset);
 
             if (rc < 0) {
+                BOOT_LOG_DBG("Here\n");
                 goto end;
             }
 
@@ -273,13 +274,14 @@ boot_erase_region(const struct flash_area *fa, uint32_t off, uint32_t size, bool
             rc = flash_area_get_sector_off(fa, (off + size - 1), &end_offset);
 
             if (rc < 0) {
+                BOOT_LOG_DBG("Here 1\n");
                 goto end;
             }
         }
 
         while (true) {
             /* Size to read in this iteration */
-            size_t csize;
+            uint32_t csize;
 
             /* Get current sector and, also, correct offset */
             rc = flash_area_get_sector_off(fa, off, &off);
@@ -290,12 +292,14 @@ boot_erase_region(const struct flash_area *fa, uint32_t off, uint32_t size, bool
 
             rc = flash_area_get_sector_size(fa, off, &csize);
             if (rc < 0) {
+                BOOT_LOG_DBG("Here 2\n");
                 goto end;
             }
 
             rc = flash_area_erase(fa, off, csize);
 
             if (rc < 0) {
+                BOOT_LOG_DBG("Here 3 %d %d\n", off, csize);
                 goto end;
             }
 
