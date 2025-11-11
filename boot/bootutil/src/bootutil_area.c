@@ -46,6 +46,50 @@ BOOT_LOG_MODULE_DECLARE(mcuboot);
 #define MCUBOOT_SWAP_USING_SCRATCH 1
 #endif
 
+static inline int flash_area_get_sector_off(const struct flash_area *fa, size_t in_off, size_t *out_off)
+{
+#if MCUBOOT_LOGICAL_SECOTOR_SIZE == 0
+    int ret = 0;
+    struct flash_sector sector;
+
+    ret = flash_area_get_sector(fa, 0, &sector);
+    if (ret < 0) {
+        return ret;
+    }
+
+    *out_off = flash_sector_get_off(&sector);
+#else
+    if (in_off >= flash_area_get_size(fa)) {
+        return -ERANGE;
+    }
+    out_off = (in_off / MCUBOOT_LOGICAL_SECOTOR_SIZE) * MCUBOOT_LOGICAL_SECOTOR_SIZE;
+#endif
+
+    return 0;
+}
+
+static inline int flash_area_get_sector_size(const struct flash_area *fa, size_t in_off, size_t *out_size)
+{
+#if MCUBOOT_LOGICAL_SECOTOR_SIZE == 0
+    int ret = 0;
+    struct flash_sector sector;
+
+    ret = flash_area_get_sector(fa, 0, &sector);
+    if (ret < 0) {
+        return ret;
+    }
+
+    *out_size = flash_sector_get_size(&sector);
+#else
+    if (in_off >= flash_area_get_size(fa)) {
+        return -ERANGE;
+    }
+    out_size = MCUBOOT_LOGICAL_SECOTOR_SIZE;
+#endif
+
+    return 0;
+}
+
 /**
  * Amount of space used to save information required when doing a swap,
  * or while a swap is under progress, but not the status of sector swap
@@ -137,22 +181,19 @@ boot_header_scramble_off_sz(const struct flash_area *fa, int slot, size_t *off, 
      * in second sector of slot.
      */
     if (slot == BOOT_SLOT_SECONDARY) {
-        ret = flash_area_get_sector(fa, 0, &sector);
+        ret = flash_area_get_sector_off(fa, 0, &loff);
         if (ret < 0) {
             return ret;
         }
-        loff = flash_sector_get_off(&sector);
     }
 #endif
 
     if (device_requires_erase(fa)) {
         /* For device requiring erase align to erase unit */
-        ret = flash_area_get_sector(fa, loff, &sector);
+        ret = flash_area_get_sector_size(fa, loff, &size);
         if (ret < 0) {
             return ret;
         }
-
-        *size = flash_sector_get_size(&sector);
     } else {
         /* For device not requiring erase align to write block */
         *size = ALIGN_UP(sizeof(((struct image_header *)0)->ih_magic), write_block);
@@ -182,13 +223,11 @@ boot_trailer_scramble_offset(const struct flash_area *fa, size_t alignment, size
         /* For device requiring erase align to erase unit */
         struct flash_sector sector;
 
-        ret = flash_area_get_sector(fa, flash_area_get_size(fa) - boot_trailer_sz(alignment),
-                                    &sector);
+        ret = flash_area_get_sector_off(fa, flash_area_get_size(fa) - boot_trailer_sz(alignment),
+                                    &off);
         if (ret < 0) {
             return ret;
         }
-
-        *off = flash_sector_get_off(&sector);
     } else {
         /* For device not requiring erase align to write block */
         *off = flash_area_get_size(fa) - ALIGN_DOWN(boot_trailer_sz(alignment), alignment);
@@ -219,13 +258,11 @@ boot_erase_region(const struct flash_area *fa, uint32_t off, uint32_t size, bool
 
         if (backwards) {
             /* Get the lowest page offset first */
-            rc = flash_area_get_sector(fa, off, &sector);
+            rc = flash_area_get_sector_off(fa, off, &end_offset);
 
             if (rc < 0) {
                 goto end;
             }
-
-            end_offset = flash_sector_get_off(&sector);
 
             /* Set boundary condition, the highest probable offset to erase, within
              * last sector to erase
@@ -233,13 +270,11 @@ boot_erase_region(const struct flash_area *fa, uint32_t off, uint32_t size, bool
             off += size - 1;
         } else {
             /* Get the highest page offset first */
-            rc = flash_area_get_sector(fa, (off + size - 1), &sector);
+            rc = flash_area_get_sector_off(fa, (off + size - 1), &end_offset);
 
             if (rc < 0) {
                 goto end;
             }
-
-            end_offset = flash_sector_get_off(&sector);
         }
 
         while (true) {
@@ -247,15 +282,16 @@ boot_erase_region(const struct flash_area *fa, uint32_t off, uint32_t size, bool
             size_t csize;
 
             /* Get current sector and, also, correct offset */
-            rc = flash_area_get_sector(fa, off, &sector);
+            rc = flash_area_get_sector_off(fa, off, &off);
 
             if (rc < 0) {
                 goto end;
             }
 
-            /* Corrected offset and size of current sector to erase */
-            off = flash_sector_get_off(&sector);
-            csize = flash_sector_get_size(&sector);
+            rc = flash_area_get_sector_size(fa, off, &csize);
+            if (rc < 0) {
+                goto end;
+            }
 
             rc = flash_area_erase(fa, off, csize);
 
